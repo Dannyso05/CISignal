@@ -28,16 +28,16 @@
     "prepack": "npm run build"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "dependencies": {
+    "@types/node": "^22.0.0",
     "@vercel/blob": "^2.8.0",
     "@vercel/functions": "^3.9.5",
     "react": "latest",
     "react-dom": "latest"
   },
   "devDependencies": {
-    "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
