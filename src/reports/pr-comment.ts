@@ -1,4 +1,5 @@
 import type { FailureRecord } from "../types.js";
+import { stripAnsi } from "../normalize/ansi.js";
 
 function escapeTable(value: string): string {
   return value.replaceAll("|", "\\|").replaceAll("\n", " ");
@@ -11,7 +12,10 @@ export function renderPullRequestComment(record: FailureRecord): string {
   const citation = primary.rawStart === primary.rawEnd
     ? `raw line ${primary.rawStart}`
     : `raw lines ${primary.rawStart}–${primary.rawEnd}`;
-  const evidenceText = evidence?.text ?? "No bounded evidence span was available.";
+  const evidenceText = stripAnsi(evidence?.text ?? "No bounded evidence span was available.");
+  const contextPackaging = record.compression.reductionPercent >= 0
+    ? `${record.compression.rawEstimatedTokens.toLocaleString()} → **${record.compression.packetEstimatedTokens.toLocaleString()} estimated tokens** (${record.compression.reductionPercent.toFixed(2)}%)`
+    : `${record.compression.rawEstimatedTokens.toLocaleString()} raw estimated tokens; short input, so fixed report metadata outweighs compression`;
 
   return `<!-- signalci-pr-report -->
 ## SignalCI failure intelligence
@@ -25,7 +29,7 @@ export function renderPullRequestComment(record: FailureRecord): string {
 | Location | \`${primary.file ?? "unknown"}${primary.sourceLine ? `:${primary.sourceLine}` : ""}\` |
 | Likely related change | ${related ? `\`${related.file}\` — ${escapeTable(related.reasons.join("; "))}` : "No changed file crossed the correlation threshold"} |
 | Cascades collapsed | ${record.cascadingFailures.length} |
-| Context compression | ${record.compression.rawEstimatedTokens.toLocaleString()} → **${record.compression.packetEstimatedTokens.toLocaleString()} estimated tokens** (${record.compression.reductionPercent.toFixed(2)}%) |
+| Context packaging | ${contextPackaging} |
 | Reproduction | \`${record.reproduce?.command ?? "not safely derivable"}\` (${record.reproduce?.verified ? "verified" : "unverified"}) |
 
 <details>

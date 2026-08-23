@@ -17,12 +17,15 @@ describe("optional integrations", () => {
     await expect(collectGitHubRun({ repository: "not-a-repository", runId: "1", baseSha: "base", headSha: "head", tokenBudget: 2000, token: "test" })).rejects.toThrow("owner/name");
   });
 
-  it("renders a PR comment with citations, compression, and limitations", () => {
+  it("renders a PR comment with citations, packaging context, and limitations", () => {
     const report = analyze({ logs: "fatal Error: demo failed", diff: "", runId: "pr-demo", tokenBudget: 900 }).report;
+    report.evidence[0].text = "\u001b[31mfatal Error: demo failed\u001b[0m";
     const comment = renderPullRequestComment(report);
     expect(comment).toContain("<!-- signalci-pr-report -->");
     expect(comment).toContain("Likely originating failure");
-    expect(comment).toContain("Context compression");
+    expect(comment).toContain("Context packaging");
+    expect(comment).toContain("short input");
+    expect(comment).not.toContain("\u001b[31m");
     expect(comment).toContain("Inference is not causation");
   });
 });

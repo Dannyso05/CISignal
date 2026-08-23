@@ -30,7 +30,7 @@ jobs:
         run: |
           mkdir -p work
           set +e
-          npm test -- tests/auth/token.test.ts > work/pr-ci.log 2>&1
+          NO_COLOR=1 npm test -- tests/auth/token.test.ts > work/pr-ci.log 2>&1
           test_status=$?
           set -e
           echo "exit_code=$test_status" >> "$GITHUB_OUTPUT"
