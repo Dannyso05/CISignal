@@ -1,4 +1,4 @@
-name: SignalCI PR
+name: CISignal PR
 
 on:
   pull_request:
@@ -38,7 +38,7 @@ jobs:
             echo "failed=true" >> "$GITHUB_OUTPUT"
           else
             echo "failed=false" >> "$GITHUB_OUTPUT"
-            echo "The focused PR demo test passed; no SignalCI comment is needed."
+            echo "The focused PR demo test passed; no CISignal comment is needed."
           fi
       - name: Capture pull request diff
         if: steps.capture.outputs.failed == 'true'
@@ -58,7 +58,7 @@ jobs:
       - name: Render pull request report
         if: steps.capture.outputs.failed == 'true'
         run: npm run signalci -- render-pr-comment --report work/pr-run/report.json --output work/pr-comment.md
-      - name: Publish or update SignalCI comment
+      - name: Publish or update CISignal comment
         if: steps.capture.outputs.failed == 'true'
         env:
           PR_NUMBER: ${{ github.event.number }}
@@ -73,7 +73,7 @@ jobs:
       - name: Write job summary
         if: steps.capture.outputs.failed == 'true'
         run: cat work/pr-comment.md >> "$GITHUB_STEP_SUMMARY"
-      - name: Upload SignalCI PR artifacts
+      - name: Upload CISignal PR artifacts
         if: steps.capture.outputs.failed == 'true'
         uses: actions/upload-artifact@v7
         with:

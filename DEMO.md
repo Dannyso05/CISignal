@@ -1,4 +1,4 @@
-# SignalCI Demo
+# CISignal Demo
 
 All included failure logs and historical records are deterministic synthetic demonstration data.
 
@@ -28,7 +28,7 @@ npm run demo
 1. Open **Actions → Demo CI → Run workflow**.
 2. Choose `expired-token`.
 3. The deliberate failure uploads `ci.log` and ends visibly red.
-4. **SignalCI Triage** starts automatically, analyzes the transcript, writes the job summary, and uploads `report.json`, `context.md`, and `summary.md`.
+4. **CISignal Triage** starts automatically, analyzes the transcript, writes the job summary, and uploads `report.json`, `context.md`, and `summary.md`.
 5. Download `report.json` and drop it onto the hosted dashboard; validation and rendering happen entirely in the browser.
 
 ## Terminal walkthrough
@@ -47,6 +47,6 @@ npm run signalci -- diagnose --report work/demo-run/report.json --output-dir wor
 
 Show in this order: raw measurements, cited primary failure, changed-file correlation, collapsed cascades, bounded `context.md`, explicit Codex handoff, fingerprint recurrence, and an evidence-backed recommendation.
 
-Close with: **“SignalCI helps agents fix today’s failure and helps teams prevent tomorrow’s.”**
+Close with: **“CISignal helps agents fix today’s failure and helps teams prevent tomorrow’s.”**
 
 Never call a proposed patch verified unless the original reproduction command actually passed.

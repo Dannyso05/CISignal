@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://signalci.dev/schemas/signalci-report.schema.json",
-  "title": "SignalCI failure record",
+  "title": "CISignal failure record",
   "type": "object",
   "required": ["schemaVersion", "runId", "conclusion", "classification", "fingerprint", "confidence", "primaryFailure", "evidence", "compression", "limitations"],
   "properties": {

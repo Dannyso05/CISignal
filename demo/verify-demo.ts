@@ -27,6 +27,9 @@ async function main(): Promise<void> {
   const actualInsightIds = dashboard.insights.recommendations.map((item: any) => item.id).sort();
   check(JSON.stringify(actualInsightIds) === JSON.stringify(expected.insightIds), "expected evidence-backed insights");
   check(dashboard.synthetic === true && dashboard.insights.generatedFrom === "synthetic-demo", "synthetic labels");
+  check(dashboard.provenance?.seed === 20260823, "fixture seed provenance");
+  check(dashboard.provenance?.historyRecords === dashboard.history.length, "history record provenance");
+  check(dashboard.provenance?.tokenEstimator === "ceil(characters / 4)", "token estimator provenance");
   process.stdout.write(`Demo verified: ${report.compression.rawLines.toLocaleString()} lines, ${report.compression.packetEstimatedTokens} tokens, ${report.compression.reductionPercent}% reduction, ${actualInsightIds.length} recommendations.\n`);
 }
 

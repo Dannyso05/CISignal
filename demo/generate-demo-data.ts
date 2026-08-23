@@ -9,6 +9,7 @@ const TOTAL_LINES = 72_418;
 const PRIMARY_START = 42_002;
 const PRIMARY_END = 42_010;
 const SEED_DEFAULT = 20_260_823;
+const TOKEN_BUDGET = 2_000;
 
 function seedFromArgs(): number {
   const index = process.argv.indexOf("--seed");
@@ -105,7 +106,7 @@ async function main(): Promise<void> {
     repository: "Dannyso05/CISignal",
     headSha: "demo-expiry-boundary",
     baseSha: "demo-base",
-    tokenBudget: 2000,
+    tokenBudget: TOKEN_BUDGET,
   });
   const history: FailureRecord[] = [];
   for (let index = 0; index < 8; index += 1) history.push(cloneRecord(result.report, index, "assertion_failure", { sameFingerprint: true, cascades: 3 }));
@@ -140,6 +141,16 @@ async function main(): Promise<void> {
     generatedAt: "2026-08-23T18:30:00.000Z",
     synthetic: true,
     deployedCommit: "visible after Vercel build",
+    provenance: {
+      seed,
+      scenario: manifest.scenario,
+      fixturePath: "fixtures/noisy-jest-run/ci.log",
+      tokenBudget: TOKEN_BUDGET,
+      tokenEstimator: "ceil(characters / 4)",
+      historyRecords: history.length,
+      generatorCommand: `npm run demo:generate -- --seed ${seed}`,
+      verificationCommand: "npm run demo:verify",
+    },
     currentRun: result.report,
     insights,
     history: history.map((record) => ({ runId: record.runId, classification: record.classification, fingerprint: record.fingerprint, conclusion: record.conclusion, attemptNumber: record.attemptNumber, cascadingFailures: record.cascadingFailures.length })),
@@ -161,7 +172,7 @@ async function main(): Promise<void> {
     writeFile(resolve(dashboardDataDir, "demo-dashboard.json"), `${JSON.stringify(dashboard, null, 2)}\n`),
   ]);
   await Promise.all(history.map((record) => writeFile(resolve(historyDir, `${record.runId}.json`), `${JSON.stringify(record, null, 2)}\n`)));
-  process.stdout.write(`Generated deterministic SignalCI demo: ${TOTAL_LINES.toLocaleString()} raw lines → ${result.report.compression.packetEstimatedTokens.toLocaleString()} estimated packet tokens.\n`);
+  process.stdout.write(`Generated deterministic CISignal demo: ${TOTAL_LINES.toLocaleString()} raw lines → ${result.report.compression.packetEstimatedTokens.toLocaleString()} estimated packet tokens.\n`);
 }
 
 main().catch((error: unknown) => {

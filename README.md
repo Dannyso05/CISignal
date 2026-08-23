@@ -1,6 +1,6 @@
-# SignalCI
+# CISignal
 
-**SignalCI turns failed CI logs and a commit diff into a compact, cited evidence packet for coding agents—then learns across runs to recommend better engineering workflows.**
+**CISignal turns failed CI logs and a commit diff into a compact, cited evidence packet for coding agents—then learns across runs to recommend better engineering workflows.**
 
 [Live dashboard](https://ci-signal.vercel.app) · [Repository](https://github.com/Dannyso05/CISignal) · [Demo guide](DEMO.md)
 
@@ -9,12 +9,12 @@
 | Included fixture | Measured result |
 | --- | ---: |
 | Raw CI transcript | 72,418 lines / 1,205,770 estimated tokens |
-| SignalCI agent packet | 481 estimated tokens |
+| CISignal agent packet | 481 estimated tokens |
 | Context reduction | 99.96% |
 | Primary evidence | raw lines 42,002–42,010 |
 | Golden checks | 22 unit/integration tests plus deterministic demo verification |
 
-SignalCI accelerates failure triage and agent repair loops; it does not make CI test execution itself faster.
+CISignal accelerates failure triage and agent repair loops; it does not make CI test execution itself faster.
 
 ## Three-command quickstart
 
@@ -26,7 +26,7 @@ npm run demo:generate -- --seed 20260823
 npm run demo
 ```
 
-Open the local URL printed by Vite. The dashboard starts with bundled synthetic data and accepts a SignalCI `report.json` via drag-and-drop. Imported reports stay in the browser and are not uploaded.
+Open the local URL printed by Vite. The dashboard starts with bundled synthetic data and accepts a CISignal `report.json` via drag-and-drop. Imported reports stay in the browser and are not uploaded.
 
 To verify everything without starting a server:
 
@@ -104,7 +104,7 @@ npm run signalci -- history insights --store data/history --output work/insights
 
 Deterministic rules identify recurring fingerprints, potential flakes from fail-then-pass evidence, cheap deterministic checks running late, shared-fixture cascade hotspots, and dependency/registry instability.
 
-Every recommendation includes supporting run IDs, confidence, an action, methodology where impact is estimated, and caveats. SignalCI analyzes the CI system—not individual engineers.
+Every recommendation includes supporting run IDs, confidence, an action, methodology where impact is estimated, and caveats. CISignal analyzes the CI system—not individual engineers.
 
 ## GitHub Actions demonstration
 
@@ -112,8 +112,8 @@ The repository includes four workflows:
 
 - `Verify` proves a clean checkout can build, test, regenerate, verify, and bundle the dashboard.
 - `Demo CI` manually runs one deliberately failing synthetic scenario and uploads the complete transcript even after failure.
-- `SignalCI Triage` runs after a failed `Demo CI`, downloads the transcript with only `actions: read` and `contents: read`, produces the standard artifacts, validates the report, and writes a GitHub job summary.
-- `SignalCI PR` analyzes the focused sample failure against the actual pull-request diff and publishes an updateable, cited PR comment.
+- `CISignal Triage` runs after a failed `Demo CI`, downloads the transcript with only `actions: read` and `contents: read`, produces the standard artifacts, validates the report, and writes a GitHub job summary.
+- `CISignal PR` analyzes the focused sample failure against the actual pull-request diff and publishes an updateable, cited PR comment.
 
 From the GitHub **Actions** tab, run **Demo CI** and choose `expired-token`, `fixture-cascade`, or `typescript-error`. The failed conclusion is intentional and triggers the follow-up triage workflow.
 
@@ -140,7 +140,7 @@ npm run signalci -- diagnose \
   --output-dir work
 ```
 
-SignalCI writes `work/codex-prompt.md` and prints an explicit non-interactive Codex command using a workspace-write sandbox and `schemas/codex-result.schema.json`. It does not silently start an agent, push a patch, open a pull request, or expose credentials.
+CISignal writes `work/codex-prompt.md` and prints an explicit non-interactive Codex command using a workspace-write sandbox and `schemas/codex-result.schema.json`. It does not silently start an agent, push a patch, open a pull request, or expose credentials.
 
 ## Dashboard and deployment
 

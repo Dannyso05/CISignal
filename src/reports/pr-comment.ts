@@ -18,7 +18,7 @@ export function renderPullRequestComment(record: FailureRecord): string {
     : `${record.compression.rawEstimatedTokens.toLocaleString()} raw estimated tokens; short input, so fixed report metadata outweighs compression`;
 
   return `<!-- signalci-pr-report -->
-## SignalCI failure intelligence
+## CISignal failure intelligence
 
 > **Likely originating failure** · ${Math.round(record.confidence * 100)}% heuristic confidence · ${citation}
 
@@ -42,7 +42,7 @@ ${evidenceText}
 </details>
 
 <details>
-<summary><strong>Why SignalCI ranked this first</strong></summary>
+<summary><strong>Why CISignal ranked this first</strong></summary>
 
 ${primary.evidenceReasons.map((reason) => `- ${reason}`).join("\n")}
 
@@ -52,6 +52,6 @@ ${primary.evidenceReasons.map((reason) => `- ${reason}`).join("\n")}
 
 _Inference is not causation. Logs and diffs are treated as untrusted data; secrets are redacted before this comment is generated._
 
-[Open the SignalCI dashboard](https://ci-signal.vercel.app) · Download the full report from this workflow's artifacts.
+[Open the CISignal dashboard](https://ci-signal.vercel.app) · Download the full report from this workflow's artifacts.
 `;
 }

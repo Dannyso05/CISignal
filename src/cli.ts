@@ -78,7 +78,7 @@ async function main(): Promise<void> {
   if (command === "diagnose") {
     const values = options([subcommand, ...rest].filter(Boolean));
     const reportValue: unknown = JSON.parse(await readFile(resolve(requireOption(values, "report")), "utf8"));
-    if (!validateFailureRecord(reportValue)) throw new Error("Diagnosis input is not a valid SignalCI report");
+    if (!validateFailureRecord(reportValue)) throw new Error("Diagnosis input is not a valid CISignal report");
     const outputDir = resolve(values.get("output-dir") ?? "work");
     const handoff = createCodexHandoff(reportValue, Number(values.get("token-budget") ?? 2000));
     await mkdir(outputDir, { recursive: true });
@@ -89,17 +89,17 @@ async function main(): Promise<void> {
   if (command === "render-pr-comment") {
     const values = options([subcommand, ...rest].filter(Boolean));
     const reportValue: unknown = JSON.parse(await readFile(resolve(requireOption(values, "report")), "utf8"));
-    if (!validateFailureRecord(reportValue)) throw new Error("PR comment input is not a valid SignalCI report");
+    if (!validateFailureRecord(reportValue)) throw new Error("PR comment input is not a valid CISignal report");
     const output = resolve(values.get("output") ?? "work/pr-comment.md");
     await mkdir(resolve(output, ".."), { recursive: true });
     await writeFile(output, renderPullRequestComment(reportValue));
-    process.stdout.write(`Wrote PR-formatted SignalCI report to ${output}\n`);
+    process.stdout.write(`Wrote PR-formatted CISignal report to ${output}\n`);
     return;
   }
   if (command === "validate") {
     const value: unknown = JSON.parse(await readFile(resolve(subcommand), "utf8"));
     if (!validateFailureRecord(value)) throw new Error("Report failed schema validation");
-    process.stdout.write("SignalCI report is valid.\n");
+    process.stdout.write("CISignal report is valid.\n");
     return;
   }
   if (command === "history" && subcommand === "ingest") {
@@ -127,6 +127,6 @@ async function main(): Promise<void> {
 
 main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`SignalCI: ${message}\n`);
+  process.stderr.write(`CISignal: ${message}\n`);
   process.exitCode = /Missing required option/.test(message) ? 2 : /No meaningful failure/.test(message) ? 4 : 1;
 });

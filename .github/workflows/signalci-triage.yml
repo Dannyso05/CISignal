@@ -1,4 +1,4 @@
-name: SignalCI Triage
+name: CISignal Triage
 
 on:
   workflow_run:
@@ -41,7 +41,7 @@ jobs:
         run: npm run signalci -- validate work/github-run/report.json
       - name: Write job summary
         run: cat work/github-run/summary.md >> "$GITHUB_STEP_SUMMARY"
-      - name: Upload SignalCI artifacts
+      - name: Upload CISignal artifacts
         uses: actions/upload-artifact@v7
         with:
           name: signalci-triage-${{ github.event.workflow_run.id }}

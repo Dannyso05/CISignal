@@ -25,7 +25,7 @@ async function githubFetch(url: string, token: string, accept = "application/vnd
       Accept: accept,
       Authorization: `Bearer ${token}`,
       "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "SignalCI/0.1",
+      "User-Agent": "CISignal/0.1",
     },
   });
   if (!response.ok) throw new Error(`GitHub API ${response.status} for ${url}: ${await response.text()}`);
@@ -44,9 +44,9 @@ export async function collectGitHubRun(input: GitHubRunInput): Promise<AnalyzeIn
   for (const job of failed) {
     try {
       const log = await githubFetch(`/repos/${input.repository}/actions/jobs/${job.id}/logs`, token, "application/vnd.github+json").then((response) => response.text());
-      logParts.push(`[SignalCI job: ${job.name}]\n${log}`);
+      logParts.push(`[CISignal job: ${job.name}]\n${log}`);
     } catch (error) {
-      logParts.push(`[SignalCI job: ${job.name}]\nError: logs unavailable — ${error instanceof Error ? error.message : String(error)}`);
+      logParts.push(`[CISignal job: ${job.name}]\nError: logs unavailable — ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   const diff = await githubFetch(`/repos/${input.repository}/compare/${input.baseSha}...${input.headSha}`, token, "application/vnd.github.v3.diff").then((response) => response.text());

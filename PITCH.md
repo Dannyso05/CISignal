@@ -1,4 +1,4 @@
-# SignalCI Pitch
+# CISignal Pitch
 
 ## Three-minute version
 
@@ -8,25 +8,25 @@ Coding agents can create a pull request in minutes. Then CI fails and we hand th
 
 ### 0:20–0:40 — Product
 
-SignalCI is the context layer between CI and coding agents. It identifies the likely originating failure, cites the exact evidence, connects it to the diff, and produces a packet with a strict token budget.
+CISignal is the context layer between CI and coding agents. It identifies the likely originating failure, cites the exact evidence, connects it to the diff, and produces a packet with a strict token budget.
 
 ### 0:40–1:35 — Current-run demo
 
-This synthetic run produced 72,418 lines—about 1.2 million estimated tokens. SignalCI selected 481 estimated tokens. It found the expired-token assertion before the later authentication failures, linked it to the expiry-boundary change, and preserved raw lines 42,002 through 42,010.
+This synthetic run produced 72,418 lines—about 1.2 million estimated tokens. CISignal selected 481 estimated tokens. It found the expired-token assertion before the later authentication failures, linked it to the expiry-boundary change, and preserved raw lines 42,002 through 42,010.
 
 Show the failure, evidence, diff, cascade timeline, packet, and explicit verification status.
 
 ### 1:35–2:15 — Historical insights
 
-The same normalized record is stored across every run. SignalCI can see that a fingerprint happened repeatedly, distinguish potential flakes from consistent regressions, and recommend concrete changes to the PR process. Every recommendation expands to the supporting runs, methodology, confidence, and caveats.
+The same normalized record is stored across every run. CISignal can see that a fingerprint happened repeatedly, distinguish potential flakes from consistent regressions, and recommend concrete changes to the PR process. Every recommendation expands to the supporting runs, methodology, confidence, and caveats.
 
 ### 2:15–2:40 — Technical credibility
 
-This is not an LLM summarizer. SignalCI deterministically parses failure events, identifies likely origins and cascades, correlates the git diff, creates stable fingerprints, and solves a bounded evidence-selection problem. Codex reasons over the result instead of cleaning the log.
+This is not an LLM summarizer. CISignal deterministically parses failure events, identifies likely origins and cascades, correlates the git diff, creates stable fingerprints, and solves a bounded evidence-selection problem. Codex reasons over the result instead of cleaning the log.
 
 ### 2:40–3:00 — Close
 
-CI emits transcripts for humans. SignalCI emits evidence for agents—and turns every failure into a lesson for the engineering team. Fix today. Prevent tomorrow.
+CI emits transcripts for humans. CISignal emits evidence for agents—and turns every failure into a lesson for the engineering team. Fix today. Prevent tomorrow.
 
 ## Ninety-second fallback
 
@@ -49,4 +49,4 @@ Never skip the evidence citation or measured comparison. Never say “verified f
 
 ## Claim boundary
 
-SignalCI accelerates failure triage and agent repair loops; it does not make CI test execution itself faster.
+CISignal accelerates failure triage and agent repair loops; it does not make CI test execution itself faster.

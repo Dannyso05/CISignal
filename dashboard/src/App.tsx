@@ -6,6 +6,16 @@ interface DashboardData {
   generatedAt: string;
   synthetic: boolean;
   deployedCommit: string;
+  provenance: {
+    seed: number;
+    scenario: string;
+    fixturePath: string;
+    tokenBudget: number;
+    tokenEstimator: string;
+    historyRecords: number;
+    generatorCommand: string;
+    verificationCommand: string;
+  };
   currentRun: FailureRecord;
   insights: InsightReport;
   history: Array<{
@@ -32,8 +42,8 @@ function formatKind(kind: string): string {
 }
 
 function confidenceLabel(confidence: number): string {
-  if (confidence >= 0.85) return "Strong evidence";
-  if (confidence >= 0.65) return "Moderate evidence";
+  if (confidence >= 0.85) return "High heuristic match";
+  if (confidence >= 0.65) return "Moderate heuristic match";
   return "Needs review";
 }
 
@@ -50,9 +60,9 @@ function validReport(value: unknown): value is FailureRecord {
 }
 
 function Logo() {
-  return <a className="brand" href="/" onClick={(event) => event.preventDefault()} aria-label="SignalCI home">
+  return <a className="brand" href="/" onClick={(event) => event.preventDefault()} aria-label="CISignal home">
     <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>
-    <span>Signal<span>CI</span></span>
+    <span><span>CI</span>Signal</span>
   </a>;
 }
 
@@ -69,8 +79,8 @@ function AppShell({ children, view, navigate }: { children: React.ReactNode; vie
     </header>
     <main>{children}</main>
     <footer>
-      <span>SignalCI · Evidence for agents, not another log viewer.</span>
-      <span>Demo data is synthetic · commit <code>{__SIGNALCI_COMMIT__}</code></span>
+      <span>CISignal · Evidence for agents, not another log viewer.</span>
+      <span>Reproducible synthetic fixture · not production telemetry · commit <code>{__SIGNALCI_COMMIT__}</code></span>
     </footer>
   </div>;
 }
@@ -88,7 +98,7 @@ function ImportReport({ onReport }: { onReport: (report: FailureRecord) => void 
     if (!file) return;
     try {
       const value: unknown = JSON.parse(await file.text());
-      if (!validReport(value)) throw new Error("Expected a SignalCI schemaVersion 0.1 report with failure evidence and compression metrics.");
+      if (!validReport(value)) throw new Error("Expected a CISignal schemaVersion 0.1 report with failure evidence and compression metrics.");
       setError("");
       onReport(value);
     } catch (caught) {
@@ -122,13 +132,14 @@ function CurrentFailure({ demo, report, onReport }: { demo: DashboardData; repor
   const rawTokens = report.compression.rawEstimatedTokens;
   const packetTokens = report.compression.packetEstimatedTokens;
   const custom = report.runId !== demo.currentRun.runId;
+  const budget = custom ? undefined : demo.provenance.tokenBudget;
 
   return <>
     <section className="hero page-grid">
       <div className="hero-copy">
         <div className="eyebrow"><span className="status-dot" /> {custom ? "Imported report · local only" : "Synthetic demo · deterministic analysis"}</div>
         <h1>Find the failure.<br /><em>Keep the evidence.</em></h1>
-        <p>SignalCI turns noisy CI transcripts into compact, cited context that coding agents can actually reason over.</p>
+        <p>CISignal turns noisy CI transcripts into compact, cited context that coding agents can actually reason over.</p>
       </div>
       <ImportReport onReport={onReport} />
       <div className="compression-card">
@@ -138,9 +149,20 @@ function CurrentFailure({ demo, report, onReport }: { demo: DashboardData; repor
           <div><strong>{packetTokens.toLocaleString()}</strong><span>est. tokens</span></div>
         </div>
         <div className="reduction"><strong>{report.compression.reductionPercent.toFixed(2)}%</strong><span>context reduction</span></div>
-        <div className="budget-track"><span style={{ width: `${Math.min(100, packetTokens / 20)}%` }} /></div>
-        <small>{packetTokens.toLocaleString()} of 2,000 token budget · raw estimate {rawTokens.toLocaleString()}</small>
+        <div className="budget-track"><span style={{ width: `${budget ? Math.min(100, (packetTokens / budget) * 100) : 100}%` }} /></div>
+        <small>{budget ? `${packetTokens.toLocaleString()} of ${budget.toLocaleString()} token budget` : `${packetTokens.toLocaleString()} packet tokens`} · raw estimate {rawTokens.toLocaleString()} · estimator {demo.provenance.tokenEstimator}</small>
       </div>
+      <aside className="provenance-card full-span">
+        <div><span>Where these numbers come from</span><strong>{custom ? "Imported report values" : "Reproducible fixture measurements"}</strong></div>
+        <p>{custom
+          ? "This report was loaded from your browser. Its values come from that file; CISignal does not upload it or mix it with the bundled demo history."
+          : `This is not production telemetry. The ${report.compression.rawLines.toLocaleString()} lines are generated from the fixed ${demo.provenance.scenario} scenario, then analyzed locally with deterministic code.`}</p>
+        {!custom && <div className="provenance-tags">
+          <code>seed {demo.provenance.seed}</code>
+          <code>{demo.provenance.fixturePath}</code>
+          <code>{demo.provenance.verificationCommand}</code>
+        </div>}
+      </aside>
     </section>
 
     <section className="content-section page-grid">
@@ -156,14 +178,14 @@ function CurrentFailure({ demo, report, onReport }: { demo: DashboardData; repor
         <h3>{report.primaryFailure.testName ?? report.primaryFailure.message}</h3>
         <p className="failure-message">{report.primaryFailure.message}</p>
         <div className="file-path"><span>↳</span><code>{report.primaryFailure.file ?? "location unavailable"}{report.primaryFailure.sourceLine ? `:${report.primaryFailure.sourceLine}` : ""}</code></div>
-        <div className="fact-note"><strong>Inference, not certainty.</strong> The score is derived from assertion specificity, ordering, diff correlation, and duplicate/cascade penalties.</div>
+        <div className="fact-note"><strong>Inference, not probability.</strong> The displayed score is a deterministic ranking heuristic derived from assertion specificity, ordering, diff correlation, and duplicate/cascade penalties.</div>
       </article>
       <aside className="confidence-card span-4">
-        <span>Confidence</span>
+        <span>Heuristic confidence</span>
         <div className="confidence-number">{percent}<small>%</small></div>
         <div className="confidence-track"><span style={{ width: `${percent}%` }} /></div>
         <strong>{confidenceLabel(report.confidence)}</strong>
-        <p>{report.primaryFailure.evidenceReasons.slice(0, 3).join(" · ")}</p>
+        <p>{report.primaryFailure.evidenceReasons.slice(0, 3).join(" · ")} · not a calibrated probability</p>
       </aside>
 
       <article className="evidence-card span-7">
@@ -174,10 +196,10 @@ function CurrentFailure({ demo, report, onReport }: { demo: DashboardData; repor
         <div className="card-label"><span>Likely related change</span><span className="correlation">correlation</span></div>
         <code>{report.relatedChanges[0]?.file ?? "No related change"}</code>
         <p>{report.relatedChanges[0]?.reasons.join(". ") || "No changed file crossed the relevance threshold."}</p>
-        <div className="mini-diff">
+        {!custom && <div className="mini-diff">
           <span>- return expiresAt &lt;= now;</span>
           <strong>+ return expiresAt &lt; now;</strong>
-        </div>
+        </div>}
       </article>
     </section>
 
@@ -239,26 +261,27 @@ function Insights({ demo }: { demo: DashboardData }) {
   const maxCategory = Math.max(...Object.values(insights.categoryCounts));
   const categories = Object.entries(insights.categoryCounts).sort((a, b) => b[1] - a[1]);
   const recurring = demo.history.filter((item) => item.fingerprint === demo.currentRun.fingerprint);
+  const firstAttemptFailures = Math.round(insights.firstAttemptFailureRate * insights.totalRuns);
 
   return <>
     <section className="insights-hero page-grid">
       <div className="span-8">
-        <div className="eyebrow"><span className="status-dot" /> Synthetic history · {insights.totalRuns} normalized records</div>
+        <div className="eyebrow"><span className="status-dot" /> Seeded fixture history · {insights.totalRuns} generated records</div>
         <h1>Fix today.<br /><em>Prevent tomorrow.</em></h1>
-        <p>The live triage record becomes the historical unit. Stable fingerprints turn recurring failures into evidence-backed workflow changes.</p>
+        <p>These counts describe a deliberately constructed demo dataset—not customer activity. Stable fingerprints show how real stored runs would become evidence-backed workflow changes.</p>
       </div>
       <div className="insight-metrics span-4">
-        <Metric value={String(insights.totalRuns)} label="stored runs" />
-        <Metric value={String(insights.recurringFingerprints)} label="recurring fingerprints" tone="accent" />
-        <Metric value={`${Math.round(insights.firstAttemptFailureRate * 100)}%`} label="first-attempt failure rate" />
-        <Metric value={String(insights.potentialFlakes)} label="potential flake pattern" />
+        <Metric value={String(insights.totalRuns)} label="seeded fixture records" />
+        <Metric value={String(insights.recurringFingerprints)} label="fingerprints seen 3+ times" tone="accent" />
+        <Metric value={`${firstAttemptFailures} / ${insights.totalRuns}`} label="first-attempt failures" />
+        <Metric value={String(insights.potentialFlakes)} label="fail-then-pass pattern" />
       </div>
     </section>
 
     <section className="content-section page-grid">
       <div className="section-heading full-span"><div><span className="section-index">01</span><h2>Failure system, not people</h2></div><span className="run-id">NO ENGINEER RANKINGS</span></div>
       <article className="category-chart span-6">
-        <div className="card-label"><span>Failure categories</span><span>{insights.failedRuns} failed runs</span></div>
+        <div className="card-label"><span>Failure categories</span><span>{insights.failedRuns} failed fixture records</span></div>
         {categories.map(([category, count]) => <div className="bar-row" key={category}>
           <span>{formatKind(category)}</span>
           <div><i style={{ width: `${(count / maxCategory) * 100}%` }} /></div>
@@ -288,17 +311,30 @@ function Insights({ demo }: { demo: DashboardData }) {
   </>;
 }
 
-function Methodology() {
+function Methodology({ demo }: { demo: DashboardData }) {
   const weights = [["Explicit failed assertion", "+10"], ["Compiler/typechecker error", "+8"], ["Changed file reference", "+5"], ["Stack references changed file", "+4"], ["Normalized duplicate", "−3"], ["Generic process exit", "−5"]];
+  const report = demo.currentRun;
   return <>
     <section className="method-hero page-grid">
-      <div className="span-8"><div className="eyebrow"><span className="status-dot" /> Inspectable by design</div><h1>Evidence selection,<br /><em>not log summarization.</em></h1><p>SignalCI runs deterministic transforms before any agent handoff. Every inference keeps a path back to raw, one-based log lines.</p></div>
+      <div className="span-8"><div className="eyebrow"><span className="status-dot" /> Inspectable by design</div><h1>Evidence selection,<br /><em>not log summarization.</em></h1><p>CISignal runs deterministic transforms before any agent handoff. Every inference keeps a path back to raw, one-based log lines.</p></div>
     </section>
     <section className="content-section page-grid">
       <div className="section-heading full-span"><div><span className="section-index">01</span><h2>Pipeline</h2></div></div>
       {[["Normalize", "Strip ANSI, extract timestamps, redact secrets, preserve raw line indices."], ["Parse", "Recognize Jest assertions, TypeScript errors, and generic process failures."], ["Rank", "Score specificity, ordering, duplicates, changed files, and likely cascades."], ["Pack", "Select exact evidence and related hunks under a strict estimated-token budget."]].map(([title, copy], index) => <article className="method-step span-3" key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{copy}</p></article>)}
       <article className="weights span-6"><div className="card-label"><span>Transparent score weights</span><span>v0.1</span></div>{weights.map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</article>
-      <article className="method-copy span-6"><h3>What the numbers mean</h3><p>Token counts use the documented MVP estimate <code>ceil(characters / 4)</code>. Confidence is a bounded heuristic derived from the winning score, event specificity, and distance from the next candidate.</p><p>Neither confidence nor diff correlation is presented as causation. Alternative events and limitations remain part of the report.</p><p>Fixture metrics are measurements from the included synthetic scenario—not production benchmarks.</p></article>
+      <article className="method-copy span-6"><h3>What the numbers mean</h3><p>Token counts use the documented estimate <code>{demo.provenance.tokenEstimator}</code>. Confidence is a bounded ranking heuristic derived from the winning score, event specificity, and distance from the next candidate.</p><p>Neither confidence nor diff correlation is presented as causation. The percentage is not a calibrated probability.</p><p>All fixture metrics are reproducible measurements from the included synthetic scenario—not production benchmarks.</p></article>
+      <article className="metric-ledger full-span">
+        <div className="card-label"><span>Metric provenance</span><span>seed {demo.provenance.seed}</span></div>
+        <div className="ledger-grid">
+          <div><strong>{report.compression.rawLines.toLocaleString()}</strong><span>raw lines</span><p>Counted in <code>{demo.provenance.fixturePath}</code>.</p></div>
+          <div><strong>{report.compression.rawEstimatedTokens.toLocaleString()}</strong><span>raw estimated tokens</span><p>Computed with <code>{demo.provenance.tokenEstimator}</code>.</p></div>
+          <div><strong>{report.compression.packetEstimatedTokens.toLocaleString()}</strong><span>packet estimated tokens</span><p>The same estimator applied to the generated evidence packet.</p></div>
+          <div><strong>{report.compression.reductionPercent.toFixed(2)}%</strong><span>context reduction</span><p><code>1 − packet tokens / raw tokens</code>.</p></div>
+          <div><strong>{Math.round(report.confidence * 100)}%</strong><span>heuristic confidence</span><p>Bounded score-gap output; not an empirical probability.</p></div>
+          <div><strong>{demo.provenance.historyRecords}</strong><span>history records</span><p>Generated scenarios used only to demonstrate aggregation.</p></div>
+        </div>
+        <div className="verification-command"><span>Reproduce it</span><code>{demo.provenance.generatorCommand}</code><code>{demo.provenance.verificationCommand}</code></div>
+      </article>
     </section>
   </>;
 }
@@ -329,11 +365,11 @@ export function App() {
   const content = useMemo(() => {
     if (!demo || !report) return null;
     if (view === "insights") return <Insights demo={demo} />;
-    if (view === "methodology") return <Methodology />;
+    if (view === "methodology") return <Methodology demo={demo} />;
     return <CurrentFailure demo={demo} report={report} onReport={setReport} />;
   }, [demo, report, view]);
 
-  if (loadError) return <div className="load-state"><strong>SignalCI could not load its demo artifact.</strong><p>{loadError}</p></div>;
+  if (loadError) return <div className="load-state"><strong>CISignal could not load its demo artifact.</strong><p>{loadError}</p></div>;
   if (!content) return <div className="load-state"><span className="loader" /><strong>Loading cited evidence…</strong></div>;
   return <AppShell view={view} navigate={navigate}>{content}</AppShell>;
 }
