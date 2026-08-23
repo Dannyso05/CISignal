@@ -16,6 +16,6 @@
     "jsx": "react-jsx",
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "demo/**/*.ts"],
+  "include": ["src/**/*.ts", "demo/**/*.ts", "api/**/*.ts"],
   "exclude": ["node_modules", "dist", "dashboard", "tests"]
 }

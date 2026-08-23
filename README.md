@@ -4,6 +4,8 @@
 
 [Live dashboard](https://ci-signal.vercel.app) · [Repository](https://github.com/Dannyso05/CISignal) · [Demo guide](DEMO.md)
 
+**GitHub App:** the webhook, branded Check Run, inline annotation, idempotent PR comment, and private Vercel Blob archive are implemented. See [GitHub App setup](docs/GITHUB_APP_SETUP.md) for the credentials and installation steps.
+
 > Demonstration metrics below were measured on the included synthetic fixture. They are not production benchmarks.
 
 | Included fixture | Measured result |
@@ -12,7 +14,7 @@
 | CISignal agent packet | 481 estimated tokens |
 | Context reduction | 99.96% |
 | Primary evidence | raw lines 42,002–42,010 |
-| Golden checks | 22 unit/integration tests plus deterministic demo verification |
+| Golden checks | 28 unit/integration tests plus deterministic demo verification |
 
 CISignal accelerates failure triage and agent repair loops; it does not make CI test execution itself faster.
 

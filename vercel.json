@@ -4,6 +4,14 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run dashboard:build",
   "outputDirectory": "dashboard/dist",
+  "functions": {
+    "api/github/webhook.ts": {
+      "maxDuration": 60
+    },
+    "api/archive.ts": {
+      "maxDuration": 30
+    }
+  },
   "rewrites": [
     { "source": "/run/:path*", "destination": "/index.html" },
     { "source": "/insights", "destination": "/index.html" },
