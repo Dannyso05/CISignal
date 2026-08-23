@@ -134,7 +134,7 @@ It requests only failed/timed-out job logs and the commit diff. Never place a to
 
 ## Install in another repository
 
-The reusable workflow at [`.github/workflows/reusable-analysis.yml`](.github/workflows/reusable-analysis.yml) makes CISignal consumable without copying the analyzer into the target repository. A target repo adds one small `workflow_run` caller, then receives a native **CISignal** check, bounded artifacts, a job summary, and an optional updateable PR comment when its existing CI fails.
+The reusable workflow at [`.github/workflows/reusable-analysis.yml`](.github/workflows/reusable-analysis.yml) makes CISignal consumable without copying the analyzer into the target repository. A target repo adds one small `workflow_run` caller, then receives a native **CISignal** Check Run on the analyzed commit, bounded artifacts, a job summary, and an optional updateable PR comment when its existing CI fails.
 
 See the [five-minute installation guide](docs/INSTALL_ANY_REPO.md) and [copyable caller workflow](examples/github-actions/cisignal.yml). The workflow uses only the target repository's short-lived `GITHUB_TOKEN`; no shared GitHub or OpenAI secret is required.
 

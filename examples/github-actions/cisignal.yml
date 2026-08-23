@@ -12,6 +12,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     permissions:
       actions: read
+      checks: write
       contents: read
       issues: write
       pull-requests: write

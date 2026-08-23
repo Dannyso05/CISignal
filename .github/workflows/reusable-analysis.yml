@@ -45,6 +45,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       actions: read
+      checks: write
       contents: read
       issues: write
       pull-requests: write
@@ -83,6 +84,34 @@ jobs:
             --head-sha "$HEAD_SHA" \
             --token-budget "$TOKEN_BUDGET" \
             --output-dir "$RUNNER_TEMP/cisignal"
+
+      - name: Publish the native CISignal check
+        env:
+          HEAD_SHA: ${{ inputs.head_sha }}
+          RUN_ID: ${{ inputs.run_id }}
+        shell: bash
+        run: |
+          existing_check_id=$(gh api "repos/${{ github.repository }}/commits/$HEAD_SHA/check-runs" --jq '.check_runs[] | select(.name == "CISignal") | .id' | head -n 1)
+          if [ -n "$existing_check_id" ]; then
+            gh api --method PATCH "repos/${{ github.repository }}/check-runs/$existing_check_id" \
+              -f name="CISignal" \
+              -f status="completed" \
+              -f conclusion="neutral" \
+              -f external_id="cisignal-$RUN_ID" \
+              -f details_url="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              -f 'output[title]=Failure intelligence ready' \
+              -F "output[summary]=@$RUNNER_TEMP/cisignal/summary.md"
+          else
+            gh api --method POST "repos/${{ github.repository }}/check-runs" \
+              -f name="CISignal" \
+              -f head_sha="$HEAD_SHA" \
+              -f status="completed" \
+              -f conclusion="neutral" \
+              -f external_id="cisignal-$RUN_ID" \
+              -f details_url="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              -f 'output[title]=Failure intelligence ready' \
+              -F "output[summary]=@$RUNNER_TEMP/cisignal/summary.md"
+          fi
 
       - name: Render the pull request report
         if: inputs.comment_on_pr && inputs.pull_request > 0

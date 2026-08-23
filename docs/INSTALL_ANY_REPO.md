@@ -13,10 +13,11 @@ CISignal can analyze another repository without copying its TypeScript source, p
 No repository secrets are required. The caller grants only:
 
 - `actions: read` to retrieve completed failed-job logs,
+- `checks: write` to create or update the native CISignal check on the analyzed commit,
 - `contents: read` to retrieve the commit diff,
 - `issues: write` and `pull-requests: write` to maintain the optional PR comment.
 
-Set `comment_on_pr: false` and remove both write permissions for read-only analysis.
+Set `comment_on_pr: false` and remove `issues: write` and `pull-requests: write` to keep only the native Check Run output.
 
 ## Production pinning
 
