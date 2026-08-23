@@ -1,0 +1,11 @@
+{
+  "demoVersion": "1.0.0",
+  "seed": 20260823,
+  "generatorVersion": "0.1.0",
+  "schemaVersion": "0.1",
+  "scenario": "expired-token-regression",
+  "synthetic": true,
+  "fixtureSha256": "02016696f1e7604a6983918caec272a834bf9a3de45a3e1b0f5bc27c83c83cf3",
+  "expectedPrimaryFile": "tests/auth/token.test.ts",
+  "expectedRelatedFile": "src/auth/token.ts"
+}

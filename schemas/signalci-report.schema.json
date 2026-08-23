@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://signalci.dev/schemas/signalci-report.schema.json",
+  "title": "SignalCI failure record",
+  "type": "object",
+  "required": ["schemaVersion", "runId", "conclusion", "classification", "fingerprint", "confidence", "primaryFailure", "evidence", "compression", "limitations"],
+  "properties": {
+    "schemaVersion": { "const": "0.1" },
+    "runId": { "type": "string", "minLength": 1 },
+    "conclusion": { "enum": ["failure", "success"] },
+    "classification": { "type": "string" },
+    "fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "primaryFailure": { "type": "object" },
+    "evidence": { "type": "array" },
+    "compression": {
+      "type": "object",
+      "required": ["rawLines", "rawBytes", "rawEstimatedTokens", "packetEstimatedTokens", "reductionPercent"]
+    },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  }
+}

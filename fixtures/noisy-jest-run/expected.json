@@ -1,0 +1,18 @@
+{
+  "fingerprint": "f519b280e5ee161f0c30acf70928ea804235aa39760723b2f009dd5afd325e26",
+  "classification": "assertion_failure",
+  "evidenceRange": [
+    42002,
+    42010
+  ],
+  "relatedFile": "src/auth/token.ts",
+  "maxPacketTokens": 2000,
+  "rawLines": 72418,
+  "insightIds": [
+    "cascade-hotspot",
+    "cheap-checks-earlier",
+    "dependency-instability",
+    "potential-flake",
+    "recurring-failure"
+  ]
+}

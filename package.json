@@ -1,0 +1,38 @@
+{
+  "name": "signalci",
+  "version": "0.1.0",
+  "description": "Agent-native CI failure intelligence with cited, token-bounded evidence packets.",
+  "type": "module",
+  "bin": {
+    "signalci": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit && tsc -p dashboard/tsconfig.json --noEmit",
+    "signalci": "tsx src/cli.ts",
+    "demo:generate": "tsx demo/generate-demo-data.ts",
+    "demo:verify": "tsx demo/verify-demo.ts",
+    "demo:dashboard": "vite --config dashboard/vite.config.ts",
+    "dashboard:build": "vite build --config dashboard/vite.config.ts",
+    "demo": "npm run demo:generate -- --seed 20260823 && npm run demo:dashboard"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@vitejs/plugin-react": "latest",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "vitest": "latest"
+  }
+}

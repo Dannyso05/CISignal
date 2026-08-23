@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SignalCI Codex diagnosis result",
+  "type": "object",
+  "required": ["diagnosis", "proposedFiles", "verification", "limitations"],
+  "properties": {
+    "diagnosis": { "type": "string" },
+    "proposedFiles": { "type": "array", "items": { "type": "string" } },
+    "verification": {
+      "type": "object",
+      "required": ["status", "commands"],
+      "properties": {
+        "status": { "enum": ["not_run", "passed", "failed"] },
+        "commands": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  }
+}

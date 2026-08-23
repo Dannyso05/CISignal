@@ -1,0 +1,179 @@
+{
+  "schemaVersion": "0.1",
+  "runId": "history-003",
+  "repository": "Dannyso05/CISignal",
+  "headSha": "demo-expiry-boundary",
+  "baseSha": "demo-base",
+  "attemptNumber": 1,
+  "conclusion": "failure",
+  "classification": "assertion_failure",
+  "fingerprint": "f519b280e5ee161f0c30acf70928ea804235aa39760723b2f009dd5afd325e26",
+  "confidence": 0.9400000000000001,
+  "primaryFailure": {
+    "id": "jest-42002",
+    "kind": "assertion_failure",
+    "framework": "jest",
+    "testName": "token expiry › rejects a token exactly at its expiration boundary",
+    "message": "expect(received).toBe(expected) // Object.is equality Expected: 401 Received: 200",
+    "file": "tests/auth/token.test.ts",
+    "sourceLine": 42,
+    "rawStart": 42002,
+    "rawEnd": 42010,
+    "score": 16,
+    "evidenceReasons": [
+      "+10 explicit failed assertion",
+      "+6 first specific error in failed section"
+    ],
+    "stackFiles": [
+      "tests/auth/token.test.ts"
+    ]
+  },
+  "cascadingFailures": [
+    {
+      "id": "jest-42011",
+      "kind": "test_failure",
+      "framework": "jest",
+      "testName": "auth fixture cascade › rejects an expired refresh token",
+      "message": "auth fixture cascade › rejects an expired refresh token",
+      "file": "tests/auth/fixture.ts",
+      "sourceLine": 71,
+      "rawStart": 42011,
+      "rawEnd": 42014,
+      "score": 0,
+      "evidenceReasons": [
+        "classified as a conservative downstream/cascade candidate"
+      ],
+      "stackFiles": [
+        "tests/auth/fixture.ts"
+      ],
+      "cascadeOf": "jest-42002"
+    },
+    {
+      "id": "generic-42012",
+      "kind": "unknown_error",
+      "framework": "generic",
+      "message": "Error: shared auth fixture remained authenticated after origin failure",
+      "rawStart": 42012,
+      "rawEnd": 42012,
+      "score": 0,
+      "evidenceReasons": [
+        "classified as a conservative downstream/cascade candidate"
+      ],
+      "cascadeOf": "jest-42002"
+    },
+    {
+      "id": "jest-42015",
+      "kind": "test_failure",
+      "framework": "jest",
+      "testName": "auth fixture cascade › clears the session cookie",
+      "message": "auth fixture cascade › clears the session cookie",
+      "file": "tests/auth/fixture.ts",
+      "sourceLine": 71,
+      "rawStart": 42015,
+      "rawEnd": 42018,
+      "score": 0,
+      "evidenceReasons": [
+        "classified as a conservative downstream/cascade candidate"
+      ],
+      "stackFiles": [
+        "tests/auth/fixture.ts"
+      ],
+      "cascadeOf": "jest-42002"
+    }
+  ],
+  "alternativeFailures": [],
+  "changedFiles": [
+    {
+      "path": "src/auth/token.ts",
+      "kind": "source",
+      "changedRanges": [
+        [
+          28,
+          34
+        ]
+      ],
+      "hunks": [
+        "@@ -28,7 +28,7 @@ export function isExpired(expiresAt: number, now: number): boolean {\n-  return expiresAt <= now;\n+  return expiresAt < now;\n }"
+      ]
+    }
+  ],
+  "relatedChanges": [
+    {
+      "file": "src/auth/token.ts",
+      "score": 11,
+      "reasons": [
+        "source and test basenames are related",
+        "changed path matches the failing token behavior"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-1",
+      "eventId": "jest-42002",
+      "rawStart": 42002,
+      "rawEnd": 42010,
+      "text": "  ● token expiry › rejects a token exactly at its expiration boundary\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: 401\n    Received: 200\n\n      at Object.<anonymous> (tests/auth/token.test.ts:42:18)\n",
+      "estimatedTokens": 57
+    },
+    {
+      "id": "evidence-2",
+      "eventId": "jest-42011",
+      "rawStart": 42011,
+      "rawEnd": 42014,
+      "text": "  ● auth fixture cascade › rejects an expired refresh token\n    Error: shared auth fixture remained authenticated after origin failure\n      at createAuthContext (tests/auth/fixture.ts:71:9)\n",
+      "estimatedTokens": 48
+    },
+    {
+      "id": "evidence-3",
+      "eventId": "generic-42012",
+      "rawStart": 42012,
+      "rawEnd": 42012,
+      "text": "    Error: shared auth fixture remained authenticated after origin failure",
+      "estimatedTokens": 19
+    },
+    {
+      "id": "evidence-4",
+      "eventId": "jest-42015",
+      "rawStart": 42015,
+      "rawEnd": 42018,
+      "text": "  ● auth fixture cascade › clears the session cookie\n    Error: shared auth fixture remained authenticated after origin failure\n      at createAuthContext (tests/auth/fixture.ts:71:9)\n",
+      "estimatedTokens": 46
+    },
+    {
+      "id": "evidence-5",
+      "eventId": "jest-42019",
+      "rawStart": 42019,
+      "rawEnd": 42021,
+      "text": "  ● auth fixture cascade › denies an expired API session\n    Error: shared auth fixture remained authenticated after origin failure\n      at createAuthContext (tests/auth/fixture.ts:71:9)",
+      "estimatedTokens": 47
+    },
+    {
+      "id": "evidence-6",
+      "eventId": "generic-72418",
+      "rawStart": 72418,
+      "rawEnd": 72418,
+      "text": "Error: Process completed with exit code 1",
+      "estimatedTokens": 11
+    }
+  ],
+  "reproduce": {
+    "command": "npm test -- tests/auth/token.test.ts",
+    "confidence": 0.72,
+    "verified": false
+  },
+  "compression": {
+    "rawLines": 72418,
+    "rawBytes": 4823093,
+    "rawEstimatedTokens": 1205770,
+    "packetEstimatedTokens": 481,
+    "reductionPercent": 99.96
+  },
+  "limitations": [
+    "The likely origin is selected with transparent heuristics; correlation does not prove causation.",
+    "Reproduction has not been executed by the deterministic analyzer.",
+    "Only bounded evidence spans are persisted; complete raw logs remain at their source."
+  ],
+  "startedAt": "2026-07-03T12:00:00.000Z",
+  "completedAt": "2026-07-03T12:09:00.000Z"
+}

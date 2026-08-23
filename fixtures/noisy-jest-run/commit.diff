@@ -1,0 +1,8 @@
+diff --git a/src/auth/token.ts b/src/auth/token.ts
+index 7f9d2a1..816fb52 100644
+--- a/src/auth/token.ts
++++ b/src/auth/token.ts
+@@ -28,7 +28,7 @@ export function isExpired(expiresAt: number, now: number): boolean {
+-  return expiresAt <= now;
++  return expiresAt < now;
+ }
