@@ -12,7 +12,7 @@
 | SignalCI agent packet | 481 estimated tokens |
 | Context reduction | 99.96% |
 | Primary evidence | raw lines 42,002–42,010 |
-| Golden checks | 17 unit/integration assertions plus deterministic demo verification |
+| Golden checks | 19 unit/integration tests plus deterministic demo verification |
 
 SignalCI accelerates failure triage and agent repair loops; it does not make CI test execution itself faster.
 
