@@ -120,6 +120,15 @@ The report keeps facts and inferences distinguishable. Every primary conclusion 
 
 `FailureStore` abstracts persistence; the MVP uses atomic file-backed JSON writes and never stores complete raw logs by default.
 
+Open the [learning-over-time dashboard](https://ci-signal.vercel.app/insights) for the end-to-end demonstration. Its 24 records are deliberately generated and labeled—not presented as customer telemetry—because a single live FastAPI failure cannot honestly prove a historical trend.
+
+The demo shows the complete memory loop:
+
+1. **Store:** every analyzed run becomes a bounded `FailureRecord` with a stable fingerprint, classification, attempt result, exact evidence, and related changes.
+2. **Match:** the example token-expiry fingerprint appears in 11 separate records after timestamps and other unstable values are normalized.
+3. **Compare:** three matching reruns pass without a relevant code change, which is recorded as potential-flake evidence rather than a definitive flake label.
+4. **Recommend:** five deterministic rules produce actions backed by contributing run IDs, confidence, methodology, and caveats.
+
 ```bash
 npm run signalci -- history ingest work/demo-run/history-record.json --store data/history
 npm run signalci -- history insights --store data/history --output work/insights.json
@@ -127,7 +136,7 @@ npm run signalci -- history insights --store data/history --output work/insights
 
 Deterministic rules identify recurring fingerprints, potential flakes from fail-then-pass evidence, cheap deterministic checks running late, shared-fixture cascade hotspots, and dependency/registry instability.
 
-Every recommendation includes supporting run IDs, confidence, an action, methodology where impact is estimated, and caveats. CISignal analyzes the CI system—not individual engineers.
+Every recommendation includes supporting run IDs, confidence, an action, methodology where impact is estimated, and caveats. CISignal analyzes the CI system—not individual engineers. Expand any recommendation on the dashboard to inspect the exact stored runs behind it.
 
 ## GitHub Actions demonstration
 

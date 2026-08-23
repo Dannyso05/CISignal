@@ -85,7 +85,7 @@ function AppShell({ children, view, navigate }: { children: React.ReactNode; vie
       <Logo />
       <nav aria-label="Primary navigation">
         <button className={view === "run" ? "active" : ""} onClick={() => navigate("run")}>Current failure</button>
-        <button className={view === "insights" ? "active" : ""} onClick={() => navigate("insights")}>Engineering insights</button>
+        <button className={view === "insights" ? "active" : ""} onClick={() => navigate("insights")}>Learn over time</button>
         <button className={view === "methodology" ? "active" : ""} onClick={() => navigate("methodology")}>Methodology</button>
       </nav>
       <a className="github-link" href="https://github.com/Dannyso05/CISignal" target="_blank" rel="noreferrer">GitHub <span>↗</span></a>
@@ -93,7 +93,7 @@ function AppShell({ children, view, navigate }: { children: React.ReactNode; vie
     <main>{children}</main>
     <footer>
       <span>CISignal · Evidence for agents, not another log viewer.</span>
-      <span>Current failure: live FastAPI proof · Insights: labeled synthetic history · commit <code>{__SIGNALCI_COMMIT__}</code></span>
+      <span>Current failure: live FastAPI proof · Learning demo: labeled synthetic history · commit <code>{__SIGNALCI_COMMIT__}</code></span>
     </footer>
   </div>;
 }
@@ -151,6 +151,8 @@ function CurrentFailure({ demo, live, report, onReport }: { demo: DashboardData;
   const relatedPath = report.relatedChanges[0]?.file;
   const relatedHunk = report.changedFiles.find((file) => file.path === relatedPath)?.hunks?.[0];
   const changedLines = relatedHunk?.split("\n").filter((line) => (line.startsWith("+") && !line.startsWith("+++")) || (line.startsWith("-") && !line.startsWith("---"))) ?? [];
+  const recurringDemoRuns = demo.history.filter((item) => item.fingerprint === demo.currentRun.fingerprint);
+  const matchingRerunPasses = recurringDemoRuns.filter((item) => item.conclusion === "success").length;
 
   return <>
     <section className="hero page-grid">
@@ -263,9 +265,26 @@ function CurrentFailure({ demo, live, report, onReport }: { demo: DashboardData;
       </div>
     </section>
 
+    <section className="learning-bridge">
+      <div className="page-grid">
+        <div className="span-8 learning-bridge-copy">
+          <div className="eyebrow"><span className="status-dot" /> From one failure to engineering memory</div>
+          <h2>CISignal learns the pattern,<br />not the person.</h2>
+          <p>Each bounded failure record adds a stable fingerprint, classification, attempt result, and cited evidence. Across runs, CISignal can surface recurrence, possible flakes, cascade hotspots, and cheaper workflow ordering.</p>
+        </div>
+        <aside className="learning-bridge-card span-4">
+          <div><strong>{demo.insights.totalRuns}</strong><span>labeled history records</span></div>
+          <div><strong>{recurringDemoRuns.length}</strong><span>matching fingerprint runs</span></div>
+          <div><strong>{matchingRerunPasses}</strong><span>matching rerun passes</span></div>
+          <div><strong>{demo.insights.recommendations.length}</strong><span>cited recommendations</span></div>
+          <a href="/insights">Open the learning-over-time demo →</a>
+        </aside>
+      </div>
+    </section>
+
     <section className="content-section page-grid">
       <div className="section-heading full-span">
-        <div><span className="section-index">03</span><h2>Transparent limitations</h2></div>
+        <div><span className="section-index">04</span><h2>Transparent limitations</h2></div>
       </div>
       {report.limitations.map((limitation, index) => <article className="limitation span-4" key={limitation}><span>0{index + 1}</span><p>{limitation}</p></article>)}
     </section>
@@ -296,14 +315,15 @@ function Insights({ demo }: { demo: DashboardData }) {
   const maxCategory = Math.max(...Object.values(insights.categoryCounts));
   const categories = Object.entries(insights.categoryCounts).sort((a, b) => b[1] - a[1]);
   const recurring = demo.history.filter((item) => item.fingerprint === demo.currentRun.fingerprint);
+  const matchingRerunPasses = recurring.filter((item) => item.conclusion === "success").length;
   const firstAttemptFailures = Math.round(insights.firstAttemptFailureRate * insights.totalRuns);
 
   return <>
     <section className="insights-hero page-grid">
       <div className="span-8">
-        <div className="eyebrow"><span className="status-dot" /> Seeded fixture history · {insights.totalRuns} generated records</div>
-        <h1>Fix today.<br /><em>Prevent tomorrow.</em></h1>
-        <p>These counts describe a deliberately constructed demo dataset—not customer activity. Stable fingerprints show how real stored runs would become evidence-backed workflow changes.</p>
+        <div className="eyebrow"><span className="status-dot" /> Learning-over-time demo · {insights.totalRuns} labeled records</div>
+        <h1>One failure is evidence.<br /><em>Repetition is a system.</em></h1>
+        <p>This deliberately constructed history shows the full learning loop without pretending one FastAPI run is production telemetry. Stable fingerprints connect related runs; result and attempt changes add context; deterministic rules turn the pattern into cited actions.</p>
       </div>
       <div className="insight-metrics span-4">
         <Metric value={String(insights.totalRuns)} label="seeded fixture records" />
@@ -313,8 +333,18 @@ function Insights({ demo }: { demo: DashboardData }) {
       </div>
     </section>
 
+    <section className="learning-demo page-grid">
+      <div className="section-heading full-span"><div><span className="section-index">01</span><h2>How the memory compounds</h2></div><span className="run-id">DETERMINISTIC · INSPECTABLE</span></div>
+      <div className="learning-steps full-span">
+        <article><span>01 · STORE</span><strong>{insights.totalRuns} bounded records</strong><p>Every analyzed run contributes a classification, stable fingerprint, attempt result, evidence spans, and related changes—not complete raw logs.</p></article>
+        <article><span>02 · MATCH</span><strong>{recurring.length} related occurrences</strong><p>Normalization removes unstable timestamps and IDs so the same token-expiry behavior can be recognized across separate runs.</p></article>
+        <article><span>03 · COMPARE</span><strong>{matchingRerunPasses} rerun passes</strong><p>Matching failures followed by passes without a relevant change become possible-flake evidence, never an automatic accusation.</p></article>
+        <article><span>04 · RECOMMEND</span><strong>{insights.recommendations.length} supported actions</strong><p>Rules cite the contributing run IDs, state confidence and methodology, and keep a caveat beside every recommendation.</p></article>
+      </div>
+    </section>
+
     <section className="content-section page-grid">
-      <div className="section-heading full-span"><div><span className="section-index">01</span><h2>Failure system, not people</h2></div><span className="run-id">NO ENGINEER RANKINGS</span></div>
+      <div className="section-heading full-span"><div><span className="section-index">02</span><h2>Failure system, not people</h2></div><span className="run-id">NO ENGINEER RANKINGS</span></div>
       <article className="category-chart span-6">
         <div className="card-label"><span>Failure categories</span><span>{insights.failedRuns} failed fixture records</span></div>
         {categories.map(([category, count]) => <div className="bar-row" key={category}>
@@ -337,7 +367,7 @@ function Insights({ demo }: { demo: DashboardData }) {
 
     <section className="dark-section recommendations-section">
       <div className="page-grid">
-        <div className="section-heading full-span inverse"><div><span className="section-index">02</span><h2>Prioritized recommendations</h2></div><span className="run-id">EVIDENCE REQUIRED</span></div>
+        <div className="section-heading full-span inverse"><div><span className="section-index">03</span><h2>Recommendations backed by stored runs</h2></div><span className="run-id">EVIDENCE REQUIRED</span></div>
         <div className="recommendations full-span">
           {insights.recommendations.slice(0, 5).map((item, index) => <RecommendationCard item={item} rank={index + 1} key={item.id} />)}
         </div>
