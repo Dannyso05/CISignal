@@ -1,0 +1,53 @@
+name: SignalCI Triage
+
+on:
+  workflow_run:
+    workflows: ["Demo CI"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  analyze:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Download failed-run transcript
+        run: gh run download "${{ github.event.workflow_run.id }}" --repo "${{ github.repository }}" --name ci-log --dir downloaded
+      - name: Analyze failed run
+        run: |
+          npm run signalci -- analyze \
+            --logs downloaded/ci.log \
+            --diff fixtures/noisy-jest-run/commit.diff \
+            --run-id "${{ github.event.workflow_run.id }}" \
+            --repository "${{ github.repository }}" \
+            --head-sha "${{ github.event.workflow_run.head_sha }}" \
+            --token-budget 2000 \
+            --output-dir work/github-run
+      - name: Validate report
+        run: npm run signalci -- validate work/github-run/report.json
+      - name: Write job summary
+        run: cat work/github-run/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload SignalCI artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: signalci-triage-${{ github.event.workflow_run.id }}
+          path: |
+            work/github-run/report.json
+            work/github-run/context.md
+            work/github-run/summary.md
+          if-no-files-found: error
+          retention-days: 14

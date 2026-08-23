@@ -1,0 +1,47 @@
+name: Demo CI
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Deliberately failing synthetic scenario
+        required: true
+        type: choice
+        default: expired-token
+        options:
+          - expired-token
+          - fixture-cascade
+          - typescript-error
+
+permissions:
+  contents: read
+
+jobs:
+  failing-fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Run deliberately failing fixture
+        id: fixture
+        shell: bash
+        run: |
+          set +e
+          npm run demo:emit-failure -- --scenario "${{ inputs.scenario }}" > ci.log 2>&1
+          fixture_status=$?
+          echo "exit_code=$fixture_status" >> "$GITHUB_OUTPUT"
+          echo "Captured the original fixture exit code: $fixture_status"
+          exit "$fixture_status"
+      - name: Upload complete CI transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-log
+          path: ci.log
+          if-no-files-found: error
+          retention-days: 7

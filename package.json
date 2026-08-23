@@ -14,6 +14,7 @@
     "signalci": "tsx src/cli.ts",
     "demo:generate": "tsx demo/generate-demo-data.ts",
     "demo:verify": "tsx demo/verify-demo.ts",
+    "demo:emit-failure": "tsx demo/run-failing-scenario.ts",
     "demo:dashboard": "vite --config dashboard/vite.config.ts",
     "dashboard:build": "vite build --config dashboard/vite.config.ts",
     "demo": "npm run demo:generate -- --seed 20260823 && npm run demo:dashboard"

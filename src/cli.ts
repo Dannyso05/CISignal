@@ -6,6 +6,8 @@ import { JsonFailureStore } from "./history/json-store.js";
 import { aggregateHistory } from "./history/aggregate.js";
 import { validateFailureRecord } from "./reports/json.js";
 import type { FailureRecord } from "./types.js";
+import { collectGitHubRun } from "./github/collect-run.js";
+import { createCodexHandoff } from "./codex/prompt.js";
 
 function options(args: string[]): Map<string, string> {
   const values = new Map<string, string>();
@@ -44,9 +46,45 @@ async function analyzeCommand(args: string[]): Promise<void> {
   process.stdout.write(`${result.summary}\nArtifacts: ${outputDir}\n`);
 }
 
+async function writeAnalysis(result: ReturnType<typeof analyze>, outputDir: string): Promise<void> {
+  await mkdir(outputDir, { recursive: true });
+  await Promise.all([
+    writeFile(resolve(outputDir, "report.json"), `${JSON.stringify(result.report, null, 2)}\n`),
+    writeFile(resolve(outputDir, "history-record.json"), `${JSON.stringify(result.report, null, 2)}\n`),
+    writeFile(resolve(outputDir, "context.md"), `${result.context}\n`),
+    writeFile(resolve(outputDir, "summary.md"), result.summary),
+  ]);
+}
+
 async function main(): Promise<void> {
   const [command, subcommand, ...rest] = process.argv.slice(2);
   if (command === "analyze") return analyzeCommand([subcommand, ...rest].filter(Boolean));
+  if (command === "github" && subcommand === "analyze") {
+    const values = options(rest);
+    const outputDir = resolve(values.get("output-dir") ?? "work/github-run");
+    const input = await collectGitHubRun({
+      repository: requireOption(values, "repository"),
+      runId: requireOption(values, "run-id"),
+      baseSha: requireOption(values, "base-sha"),
+      headSha: requireOption(values, "head-sha"),
+      tokenBudget: Number(values.get("token-budget") ?? 2000),
+    });
+    const result = analyze(input);
+    await writeAnalysis(result, outputDir);
+    process.stdout.write(`${result.summary}\nArtifacts: ${outputDir}\n`);
+    return;
+  }
+  if (command === "diagnose") {
+    const values = options([subcommand, ...rest].filter(Boolean));
+    const reportValue: unknown = JSON.parse(await readFile(resolve(requireOption(values, "report")), "utf8"));
+    if (!validateFailureRecord(reportValue)) throw new Error("Diagnosis input is not a valid SignalCI report");
+    const outputDir = resolve(values.get("output-dir") ?? "work");
+    const handoff = createCodexHandoff(reportValue, Number(values.get("token-budget") ?? 2000));
+    await mkdir(outputDir, { recursive: true });
+    await writeFile(resolve(outputDir, "codex-prompt.md"), `${handoff.prompt}\n`);
+    process.stdout.write(`Wrote bounded Codex handoff to ${resolve(outputDir, "codex-prompt.md")}\nRun explicitly if desired:\n${handoff.command}\n`);
+    return;
+  }
   if (command === "validate") {
     const value: unknown = JSON.parse(await readFile(resolve(subcommand), "utf8"));
     if (!validateFailureRecord(value)) throw new Error("Report failed schema validation");
