@@ -1,87 +1,25 @@
-name: CISignal PR
+name: CISignal post-CI
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_run:
+    workflows: ["Verify"]
+    types: [completed]
 
-permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+permissions: {}
 
 jobs:
-  triage:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      GH_TOKEN: ${{ github.token }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Capture focused test output
-        id: capture
-        shell: bash
-        run: |
-          mkdir -p work
-          set +e
-          NO_COLOR=1 npm test -- tests/auth/token.test.ts > work/pr-ci.log 2>&1
-          test_status=$?
-          set -e
-          echo "exit_code=$test_status" >> "$GITHUB_OUTPUT"
-          if [ "$test_status" -ne 0 ]; then
-            echo "failed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "failed=false" >> "$GITHUB_OUTPUT"
-            echo "The focused PR demo test passed; no CISignal comment is needed."
-          fi
-      - name: Capture pull request diff
-        if: steps.capture.outputs.failed == 'true'
-        run: git diff "origin/${{ github.base_ref }}...HEAD" -- > work/pr.diff
-      - name: Analyze pull request failure
-        if: steps.capture.outputs.failed == 'true'
-        run: |
-          npm run signalci -- analyze \
-            --logs work/pr-ci.log \
-            --diff work/pr.diff \
-            --run-id "pr-${{ github.event.number }}-${{ github.run_id }}" \
-            --repository "${{ github.repository }}" \
-            --base-sha "${{ github.event.pull_request.base.sha }}" \
-            --head-sha "${{ github.event.pull_request.head.sha }}" \
-            --token-budget 2000 \
-            --output-dir work/pr-run
-      - name: Render pull request report
-        if: steps.capture.outputs.failed == 'true'
-        run: npm run signalci -- render-pr-comment --report work/pr-run/report.json --output work/pr-comment.md
-      - name: Publish or update CISignal comment
-        if: steps.capture.outputs.failed == 'true'
-        env:
-          PR_NUMBER: ${{ github.event.number }}
-        shell: bash
-        run: |
-          existing_comment_id=$(gh api "repos/${{ github.repository }}/issues/$PR_NUMBER/comments" --paginate --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("<!-- signalci-pr-report -->")) | .id' | tail -n 1)
-          if [ -n "$existing_comment_id" ]; then
-            gh api --method PATCH "repos/${{ github.repository }}/issues/comments/$existing_comment_id" -F body=@work/pr-comment.md
-          else
-            gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body-file work/pr-comment.md
-          fi
-      - name: Write job summary
-        if: steps.capture.outputs.failed == 'true'
-        run: cat work/pr-comment.md >> "$GITHUB_STEP_SUMMARY"
-      - name: Upload CISignal PR artifacts
-        if: steps.capture.outputs.failed == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: signalci-pr-${{ github.event.number }}
-          path: |
-            work/pr-run/report.json
-            work/pr-run/context.md
-            work/pr-run/summary.md
-            work/pr-comment.md
-          if-no-files-found: error
-          retention-days: 14
+  analyze:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.pull_requests[0] }}
+    permissions:
+      actions: read
+      checks: write
+      contents: read
+      issues: write
+      pull-requests: write
+    uses: Dannyso05/CISignal/.github/workflows/reusable-analysis.yml@bce5ecd9d22c66c6bcb0cc4e2769b50f8d64ee3c
+    with:
+      run_id: ${{ github.event.workflow_run.id }}
+      base_sha: ${{ github.event.workflow_run.pull_requests[0].base.sha }}
+      head_sha: ${{ github.event.workflow_run.head_sha }}
+      pull_request: ${{ github.event.workflow_run.pull_requests[0].number }}
+      cisignal_ref: bce5ecd9d22c66c6bcb0cc4e2769b50f8d64ee3c
