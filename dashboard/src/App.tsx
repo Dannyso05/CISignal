@@ -29,6 +29,19 @@ interface DashboardData {
   contextPacket: string;
 }
 
+interface LiveProof {
+  observedAt: string;
+  repository: string;
+  workflowName: string;
+  failedChecks: number;
+  platforms: string[];
+  pullRequestUrl: string;
+  sourceRunUrl: string;
+  analysisRunUrl: string;
+  checkRunUrl: string;
+  report: FailureRecord;
+}
+
 type View = "run" | "insights" | "methodology";
 
 function viewFromPath(): View {
@@ -80,7 +93,7 @@ function AppShell({ children, view, navigate }: { children: React.ReactNode; vie
     <main>{children}</main>
     <footer>
       <span>CISignal · Evidence for agents, not another log viewer.</span>
-      <span>Reproducible synthetic fixture · not production telemetry · commit <code>{__SIGNALCI_COMMIT__}</code></span>
+      <span>Current failure: live FastAPI proof · Insights: labeled synthetic history · commit <code>{__SIGNALCI_COMMIT__}</code></span>
     </footer>
   </div>;
 }
@@ -115,7 +128,7 @@ function ImportReport({ onReport }: { onReport: (report: FailureRecord) => void 
       onDrop={(event) => { event.preventDefault(); setDragging(false); void load(event.dataTransfer.files[0]); }}
     >
       <span className="upload-icon">↑</span>
-      <span><strong>Load your report</strong><small>Drop report.json · stays in your browser</small></span>
+      <span><strong>Inspect a report file (optional)</strong><small>No upload is needed for automatic PR reporting</small></span>
     </button>
     <input ref={input} type="file" accept="application/json,.json" hidden onChange={(event) => void load(event.target.files?.[0])} />
     {error && <p className="import-error" role="alert">{error}</p>}
@@ -126,22 +139,37 @@ function Metric({ value, label, tone = "default" }: { value: string; label: stri
   return <div className={`metric ${tone}`}><strong>{value}</strong><span>{label}</span></div>;
 }
 
-function CurrentFailure({ demo, report, onReport }: { demo: DashboardData; report: FailureRecord; onReport: (report: FailureRecord) => void }) {
+function CurrentFailure({ demo, live, report, onReport }: { demo: DashboardData; live: LiveProof; report: FailureRecord; onReport: (report: FailureRecord) => void }) {
   const primaryEvidence = report.evidence.find((item) => item.eventId === report.primaryFailure.id) ?? report.evidence[0];
   const percent = Math.round(report.confidence * 100);
   const rawTokens = report.compression.rawEstimatedTokens;
   const packetTokens = report.compression.packetEstimatedTokens;
-  const custom = report.runId !== demo.currentRun.runId;
-  const budget = custom ? undefined : demo.provenance.tokenBudget;
+  const isLive = report.runId === live.report.runId;
+  const isFixture = report.runId === demo.currentRun.runId;
+  const custom = !isLive && !isFixture;
+  const budget = isFixture ? demo.provenance.tokenBudget : undefined;
+  const relatedPath = report.relatedChanges[0]?.file;
+  const relatedHunk = report.changedFiles.find((file) => file.path === relatedPath)?.hunks?.[0];
+  const changedLines = relatedHunk?.split("\n").filter((line) => (line.startsWith("+") && !line.startsWith("+++")) || (line.startsWith("-") && !line.startsWith("---"))) ?? [];
 
   return <>
     <section className="hero page-grid">
       <div className="hero-copy">
-        <div className="eyebrow"><span className="status-dot" /> {custom ? "Imported report · local only" : "Synthetic demo · deterministic analysis"}</div>
-        <h1>Find the failure.<br /><em>Keep the evidence.</em></h1>
-        <p>CISignal turns noisy CI transcripts into compact, cited context that coding agents can actually reason over.</p>
+        <div className="eyebrow"><span className="status-dot" /> {isLive ? "Live cross-repository proof · FastAPI" : custom ? "Imported report · local only" : "Synthetic fixture · deterministic analysis"}</div>
+        <h1>Your CI fails.<br /><em>CISignal explains why.</em></h1>
+        <p>Your existing CI still owns checkout, environments, and tests. After it completes, CISignal automatically reads the failed-job logs and commit diff, then posts cited failure intelligence back to the pull request.</p>
       </div>
-      <ImportReport onReport={onReport} />
+      <aside className="integration-panel">
+        <span>Verified production-shaped flow</span>
+        <strong>{live.repository} · {live.workflowName}</strong>
+        <p>{live.failedChecks} failed checks across {live.platforms.join(", ")}. CISignal ran afterward through <code>workflow_run</code>.</p>
+        <div className="proof-links">
+          <a href={live.pullRequestUrl} target="_blank" rel="noreferrer">Open PR ↗</a>
+          <a href={live.sourceRunUrl} target="_blank" rel="noreferrer">Source CI ↗</a>
+          <a href={live.analysisRunUrl} target="_blank" rel="noreferrer">CISignal run ↗</a>
+        </div>
+        <ImportReport onReport={onReport} />
+      </aside>
       <div className="compression-card">
         <div className="compression-flow">
           <div><strong>{report.compression.rawLines.toLocaleString()}</strong><span>raw lines</span></div>
@@ -153,11 +181,17 @@ function CurrentFailure({ demo, report, onReport }: { demo: DashboardData; repor
         <small>{budget ? `${packetTokens.toLocaleString()} of ${budget.toLocaleString()} token budget` : `${packetTokens.toLocaleString()} packet tokens`} · raw estimate {rawTokens.toLocaleString()} · estimator {demo.provenance.tokenEstimator}</small>
       </div>
       <aside className="provenance-card full-span">
-        <div><span>Where these numbers come from</span><strong>{custom ? "Imported report values" : "Reproducible fixture measurements"}</strong></div>
-        <p>{custom
+        <div><span>Where these numbers come from</span><strong>{isLive ? "Completed GitHub Actions jobs" : custom ? "Imported report values" : "Reproducible fixture measurements"}</strong></div>
+        <p>{isLive
+          ? `Measured from FastAPI Test run ${report.runId}. GitHub ran the real OS/Python matrix first; CISignal then analyzed its completed failed-job logs without rerunning pytest.`
+          : custom
           ? "This report was loaded from your browser. Its values come from that file; CISignal does not upload it or mix it with the bundled demo history."
           : `This is not production telemetry. The ${report.compression.rawLines.toLocaleString()} lines are generated from the fixed ${demo.provenance.scenario} scenario, then analyzed locally with deterministic code.`}</p>
-        {!custom && <div className="provenance-tags">
+        {isLive ? <div className="provenance-tags">
+          <a href={live.sourceRunUrl} target="_blank" rel="noreferrer">FastAPI Test run</a>
+          <a href={live.checkRunUrl} target="_blank" rel="noreferrer">Neutral CISignal check</a>
+          <code>automatic · no manual upload</code>
+        </div> : !custom && <div className="provenance-tags">
           <code>seed {demo.provenance.seed}</code>
           <code>{demo.provenance.fixturePath}</code>
           <code>{demo.provenance.verificationCommand}</code>
@@ -196,9 +230,8 @@ function CurrentFailure({ demo, report, onReport }: { demo: DashboardData; repor
         <div className="card-label"><span>Likely related change</span><span className="correlation">correlation</span></div>
         <code>{report.relatedChanges[0]?.file ?? "No related change"}</code>
         <p>{report.relatedChanges[0]?.reasons.join(". ") || "No changed file crossed the relevance threshold."}</p>
-        {!custom && <div className="mini-diff">
-          <span>- return expiresAt &lt;= now;</span>
-          <strong>+ return expiresAt &lt; now;</strong>
+        {changedLines.length > 0 && <div className="mini-diff">
+          {changedLines.map((line) => line.startsWith("+") ? <strong key={line}>{line}</strong> : <span key={line}>{line}</span>)}
         </div>}
       </article>
     </section>
@@ -212,7 +245,9 @@ function CurrentFailure({ demo, report, onReport }: { demo: DashboardData; repor
         <div className="timeline span-7">
           <div className="timeline-item origin"><span className="timeline-node" /><div><small>ORIGIN · L{report.primaryFailure.rawStart.toLocaleString()}</small><strong>{report.primaryFailure.testName ?? report.primaryFailure.message}</strong><p>Specific assertion · highest evidence score</p></div></div>
           {report.cascadingFailures.slice(0, 3).map((failure, index) => <div className="timeline-item" key={failure.id}><span className="timeline-node" /><div><small>CASCADE {index + 1} · L{failure.rawStart.toLocaleString()}</small><strong>{failure.testName ?? failure.message}</strong><p>Collapsed beneath {report.primaryFailure.id}</p></div></div>)}
-          <div className="timeline-item exit"><span className="timeline-node" /><div><small>FINAL PROCESS EXIT</small><strong>Generic exit code 1</strong><p>Low-value secondary signal</p></div></div>
+          {isLive
+            ? <div className="timeline-item exit"><span className="timeline-node" /><div><small>SOURCE WORKFLOW</small><strong>FastAPI Test completed: failure</strong><p>CISignal observed this result afterward; it did not execute the test.</p></div></div>
+            : <div className="timeline-item exit"><span className="timeline-node" /><div><small>FINAL PROCESS EXIT</small><strong>Generic exit code 1</strong><p>Low-value secondary signal</p></div></div>}
         </div>
         <div className="packet-card span-5">
           <div className="packet-header"><span>AGENT_PACKET.md</span><span>{packetTokens} TOKENS</span></div>
@@ -341,14 +376,17 @@ function Methodology({ demo }: { demo: DashboardData }) {
 
 export function App() {
   const [demo, setDemo] = useState<DashboardData>();
+  const [live, setLive] = useState<LiveProof>();
   const [report, setReport] = useState<FailureRecord>();
   const [view, setView] = useState<View>(viewFromPath());
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    fetch("/data/demo-dashboard.json")
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error(`Demo data returned ${response.status}`)))
-      .then((value: DashboardData) => { setDemo(value); setReport(value.currentRun); })
+    Promise.all([
+      fetch("/data/demo-dashboard.json").then((response) => response.ok ? response.json() : Promise.reject(new Error(`Demo data returned ${response.status}`))),
+      fetch("/data/fastapi-live-proof.json").then((response) => response.ok ? response.json() : Promise.reject(new Error(`Live proof returned ${response.status}`))),
+    ])
+      .then(([demoValue, liveValue]: [DashboardData, LiveProof]) => { setDemo(demoValue); setLive(liveValue); setReport(liveValue.report); })
       .catch((error: Error) => setLoadError(error.message));
     const onPopState = () => setView(viewFromPath());
     window.addEventListener("popstate", onPopState);
@@ -356,18 +394,18 @@ export function App() {
   }, []);
 
   const navigate = (next: View) => {
-    const path = next === "run" ? "/run/demo-run-001" : `/${next}`;
+    const path = next === "run" ? "/run/fastapi-32672867721" : `/${next}`;
     window.history.pushState({}, "", path);
     setView(next);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const content = useMemo(() => {
-    if (!demo || !report) return null;
+    if (!demo || !live || !report) return null;
     if (view === "insights") return <Insights demo={demo} />;
     if (view === "methodology") return <Methodology demo={demo} />;
-    return <CurrentFailure demo={demo} report={report} onReport={setReport} />;
-  }, [demo, report, view]);
+    return <CurrentFailure demo={demo} live={live} report={report} onReport={setReport} />;
+  }, [demo, live, report, view]);
 
   if (loadError) return <div className="load-state"><strong>CISignal could not load its demo artifact.</strong><p>{loadError}</p></div>;
   if (!content) return <div className="load-state"><span className="loader" /><strong>Loading cited evidence…</strong></div>;

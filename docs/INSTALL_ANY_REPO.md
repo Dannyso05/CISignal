@@ -10,6 +10,8 @@ CISignal can analyze another repository without copying its TypeScript source, p
 4. Open a pull request that makes the watched CI workflow fail.
 5. Open the resulting **CISignal / Analyze failed CI run** check. Its summary identifies the likely origin; its artifact contains `report.json`, `context.md`, and `summary.md`. For pull-request runs, CISignal also creates or updates one cited PR comment.
 
+That is the entire recurring workflow. After the caller exists on the default branch, developers push and open pull requests normally; CISignal observes completed failures automatically. There is no manual report upload, no CISignal-owned test job, and no need to trigger the analyzer by hand.
+
 No repository secrets are required. The caller grants only:
 
 - `actions: read` to retrieve completed failed-job logs,
@@ -18,6 +20,8 @@ No repository secrets are required. The caller grants only:
 - `issues: write` and `pull-requests: write` to maintain the optional PR comment.
 
 Set `comment_on_pr: false` and remove `issues: write` and `pull-requests: write` to keep only the native Check Run output.
+
+The file picker on [the public dashboard](https://ci-signal.vercel.app) is an optional local report inspector, not an installation or reporting step. The static dashboard does not yet list every future run automatically; the Check Run, PR comment, job summary, and bounded artifact are the automatic outputs.
 
 ## Production pinning
 

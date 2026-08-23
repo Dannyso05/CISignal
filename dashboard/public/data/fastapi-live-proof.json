@@ -1,0 +1,121 @@
+{
+  "observedAt": "2026-08-23T23:15:24.000Z",
+  "repository": "Dannyso05/fastapi",
+  "workflowName": "Test",
+  "failedChecks": 17,
+  "platforms": [
+    "Ubuntu",
+    "macOS",
+    "Windows"
+  ],
+  "pullRequestUrl": "https://github.com/Dannyso05/fastapi/pull/1",
+  "sourceRunUrl": "https://github.com/Dannyso05/fastapi/actions/runs/32672867721",
+  "analysisRunUrl": "https://github.com/Dannyso05/fastapi/actions/runs/32673072610",
+  "checkRunUrl": "https://github.com/Dannyso05/fastapi/runs/97276804673",
+  "report": {
+    "schemaVersion": "0.1",
+    "runId": "32672867721",
+    "repository": "Dannyso05/fastapi",
+    "pullRequest": 1,
+    "headSha": "6e9d69b3fc556c280b1c07cd7c7b60482ad98f0e",
+    "baseSha": "7b901f7b54a56c7d5ccf314508a3cd4431aa7323",
+    "attemptNumber": 1,
+    "conclusion": "failure",
+    "classification": "assertion_failure",
+    "fingerprint": "f7a0ae01b0156f3361559bea3825a66068234f1c53a86fc775ea254ff484a409",
+    "confidence": 0.8520000000000001,
+    "primaryFailure": {
+      "id": "pytest-4022",
+      "kind": "assertion_failure",
+      "framework": "pytest",
+      "testName": "test_health_contract",
+      "message": "AssertionError: assert {'status': 'degraded'} == {'status': 'ok'}",
+      "file": "tests/cisignal_demo/test_app.py",
+      "rawStart": 4022,
+      "rawEnd": 4022,
+      "score": 16,
+      "evidenceReasons": [
+        "+10 explicit failed assertion",
+        "+6 first specific error in failed section"
+      ],
+      "stackFiles": []
+    },
+    "cascadingFailures": [],
+    "alternativeFailures": [
+      {
+        "id": "pytest-22491",
+        "kind": "assertion_failure",
+        "framework": "pytest",
+        "testName": "test_health_contract",
+        "message": "AssertionError",
+        "file": "tests/cisignal_demo/test_app.py",
+        "rawStart": 22491,
+        "rawEnd": 22491,
+        "score": 10,
+        "evidenceReasons": [
+          "+10 explicit failed assertion"
+        ],
+        "stackFiles": []
+      }
+    ],
+    "changedFiles": [
+      {
+        "path": "tests/cisignal_demo/app.py",
+        "kind": "test",
+        "changedRanges": [
+          [
+            5,
+            8
+          ]
+        ],
+        "hunks": [
+          "@@ -5,4 +5,4 @@\n \n @app.get(\"/health\")\n def health() -> dict[str, str]:\n-    return {\"status\": \"ok\"}\n+    return {\"status\": \"degraded\"}\n"
+        ]
+      }
+    ],
+    "relatedChanges": [
+      {
+        "file": "tests/cisignal_demo/app.py",
+        "score": 6,
+        "reasons": [
+          "source and test basenames are related"
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "evidence-1",
+        "eventId": "pytest-4022",
+        "rawStart": 4022,
+        "rawEnd": 4022,
+        "text": "2026-08-23T23:13:02.8405023Z FAILED tests/cisignal_demo/test_app.py::test_health_contract - AssertionError: assert {'status': 'degraded'} == {'status': 'ok'}",
+        "estimatedTokens": 40
+      },
+      {
+        "id": "evidence-2",
+        "eventId": "pytest-22491",
+        "rawStart": 22491,
+        "rawEnd": 22491,
+        "text": "2026-08-23T23:13:08.3990860Z FAILED tests/cisignal_demo/test_app.py::test_health_contract - AssertionError",
+        "estimatedTokens": 27
+      }
+    ],
+    "reproduce": {
+      "command": "python -m pytest tests/cisignal_demo/test_app.py::test_health_contract",
+      "confidence": 0.78,
+      "verified": false
+    },
+    "compression": {
+      "rawLines": 42068,
+      "rawBytes": 4104080,
+      "rawEstimatedTokens": 1025617,
+      "packetEstimatedTokens": 377,
+      "reductionPercent": 99.96
+    },
+    "limitations": [
+      "The likely origin is selected with transparent heuristics; correlation does not prove causation.",
+      "Reproduction has not been executed by the deterministic analyzer.",
+      "Only bounded evidence spans are persisted; complete raw logs remain at their GitHub Actions source."
+    ]
+  }
+}

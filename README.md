@@ -2,9 +2,30 @@
 
 **CISignal turns failed CI logs and a commit diff into a compact, cited evidence packet for coding agents—then learns across runs to recommend better engineering workflows.**
 
-[Live dashboard](https://ci-signal.vercel.app) · [Repository](https://github.com/Dannyso05/CISignal) · [Install in any repo](docs/INSTALL_ANY_REPO.md) · [Demo guide](DEMO.md)
+[Live dashboard](https://ci-signal.vercel.app) · [Live FastAPI proof](https://github.com/Dannyso05/fastapi/pull/1) · [Repository](https://github.com/Dannyso05/CISignal) · [Install in any repo](docs/INSTALL_ANY_REPO.md) · [Demo guide](DEMO.md)
 
-**GitHub App:** the webhook, branded Check Run, inline annotation, idempotent PR comment, and private Vercel Blob archive are implemented. See [GitHub App setup](docs/GITHUB_APP_SETUP.md) for the credentials and installation steps.
+The normal GitHub path is automatic: your existing CI workflow still runs its own tests, then a small `workflow_run` caller invokes CISignal only after that workflow completes with a failure. CISignal reads the completed failed-job logs and commit diff, publishes a neutral Check Run, updates one cited PR comment, and uploads a bounded evidence artifact. It does not rerun the test suite or replace the CI result.
+
+## Live cross-repository proof
+
+The FastAPI fork demonstrates the production-shaped path against FastAPI's existing, unmodified **Test** workflow—not a CISignal-owned test job.
+
+| Verified fact | Live result |
+| --- | --- |
+| Source CI | [FastAPI Test run 32672867721](https://github.com/Dannyso05/fastapi/actions/runs/32672867721) |
+| Real CI environment | Ubuntu, macOS, and Windows across FastAPI's Python matrix |
+| Source conclusion | 17 failed checks in the completed workflow |
+| CISignal observer | [Separate `workflow_run` analysis 32673072610](https://github.com/Dannyso05/fastapi/actions/runs/32673072610) |
+| PR output | [Neutral CISignal check and idempotent comment](https://github.com/Dannyso05/fastapi/pull/1) |
+| Likely origin | `test_health_contract` in `tests/cisignal_demo/test_app.py` |
+| Related change | `tests/cisignal_demo/app.py` |
+| Measured context | 42,068 log lines / 1,025,617 estimated tokens → 377-token packet (99.96% reduction) |
+
+**No manual report upload is required for GitHub use.** The dashboard's file picker is only an optional, client-side inspector for a `report.json`; imported files stay in the browser. The PR check, comment, summary, and artifact are created automatically after the watched CI workflow fails.
+
+The GitHub App webhook, branded Check Run path, and private Vercel Blob archive are also implemented for the one-click installation direction. See [GitHub App setup](docs/GITHUB_APP_SETUP.md).
+
+## Local deterministic demo
 
 > Demonstration metrics below were measured on the included synthetic fixture. They are not production benchmarks.
 
@@ -18,7 +39,7 @@
 
 CISignal accelerates failure triage and agent repair loops; it does not make CI test execution itself faster.
 
-## Three-command quickstart
+### Three-command quickstart
 
 Requires Node.js 20 or newer. The demo is pinned to seed `20260823`.
 
@@ -28,7 +49,7 @@ npm run demo:generate -- --seed 20260823
 npm run demo
 ```
 
-Open the local URL printed by Vite. The dashboard starts with bundled synthetic data and accepts a CISignal `report.json` via drag-and-drop. Imported reports stay in the browser and are not uploaded.
+Open the local URL printed by Vite. The dashboard starts on the checked-in live FastAPI proof. The engineering-insights page remains a clearly labeled synthetic history demonstration, and the optional file picker accepts a CISignal `report.json` without uploading it.
 
 To verify everything without starting a server:
 
@@ -45,17 +66,17 @@ npm run dashboard:build
 
 ```mermaid
 flowchart LR
-    A[CI log + git diff] --> B[Normalize + redact]
-    B --> C[Jest / Vitest / pytest / TypeScript / generic parsers]
-    C --> D[Rank + deduplicate + detect cascades]
-    D --> E[Correlate changed files]
+    A[Existing CI workflow] -->|completed failure| B[workflow_run caller]
+    B --> C[Read failed-job logs + commit diff]
+    C --> D[Normalize + redact]
+    D --> E[Parse + rank + correlate]
     E --> F[Budgeted evidence packet]
-    F --> G[Codex handoff]
-    D --> H[Versioned failure record]
-    H --> I[Fingerprint history]
-    I --> J[Evidence-backed recommendations]
-    F --> K[Vite dashboard]
-    J --> K
+    F --> G[Neutral Check Run]
+    F --> H[Idempotent PR comment]
+    F --> I[Bounded artifact]
+    E --> J[Versioned failure history]
+    J --> K[Evidence-backed recommendations]
+    I -. optional local inspection .-> L[Vite dashboard]
 ```
 
 The live triage pipeline and historical insights share the same versioned `FailureRecord`; they are not separate mock applications.
@@ -110,12 +131,15 @@ Every recommendation includes supporting run IDs, confidence, an action, methodo
 
 ## GitHub Actions demonstration
 
-The repository includes four workflows:
+For an external repository, CISignal watches the repository's existing CI by exact workflow name. The [FastAPI caller](https://github.com/Dannyso05/fastapi/blob/cisignal-integration/.github/workflows/cisignal.yml) watches `Test`; when `Test` succeeds, CISignal does nothing, and when it fails, CISignal analyzes that completed run.
+
+This repository also includes five workflow files for verification and focused demonstrations:
 
 - `Verify` proves a clean checkout can build, test, regenerate, verify, and bundle the dashboard.
 - `Demo CI` manually runs one deliberately failing synthetic scenario and uploads the complete transcript even after failure.
 - `CISignal Triage` runs after a failed `Demo CI`, downloads the transcript with only `actions: read` and `contents: read`, produces the standard artifacts, validates the report, and writes a GitHub job summary.
 - `CISignal PR` analyzes the focused sample failure against the actual pull-request diff and publishes an updateable, cited PR comment.
+- `CISignal reusable analysis` is the callable production-shaped analyzer used by other repositories.
 
 From the GitHub **Actions** tab, run **Demo CI** and choose `expired-token`, `fixture-cascade`, or `typescript-error`. The failed conclusion is intentional and triggers the follow-up triage workflow.
 
@@ -138,6 +162,8 @@ The reusable workflow at [`.github/workflows/reusable-analysis.yml`](.github/wor
 
 See the [five-minute installation guide](docs/INSTALL_ANY_REPO.md) and [copyable caller workflow](examples/github-actions/cisignal.yml). The workflow uses only the target repository's short-lived `GITHUB_TOKEN`; no shared GitHub or OpenAI secret is required.
 
+Once the caller is committed to the target repository's default branch, there is no manual trigger or report upload: push or open a PR as usual and let the watched CI workflow run.
+
 ## Codex handoff
 
 The deterministic analyzer has no required OpenAI API call. Generate a bounded, human-controlled handoff with:
@@ -154,10 +180,10 @@ CISignal writes `work/codex-prompt.md` and prints an explicit non-interactive Co
 
 The static Vite/React dashboard provides:
 
-- `/run/demo-run-001` — likely origin, exact evidence, related diff, cascade timeline, and packet preview,
+- `/run/fastapi-32672867721` — the checked-in live FastAPI proof with links to the source CI, analyzer run, Check Run, exact evidence, related diff, and packet preview,
 - `/insights` — category distribution, fingerprint recurrence, potential-flake evidence, and prioritized recommendations,
 - `/methodology` — scoring, token estimation, and claim boundaries,
-- client-side `report.json` validation and import.
+- optional client-side `report.json` validation and inspection.
 
 Vercel reads the checked-in [`vercel.json`](vercel.json):
 
@@ -168,7 +194,9 @@ Output directory: dashboard/dist
 Production branch: main
 ```
 
-No backend, database, webhook, API key, or custom domain is required. Route rewrites make direct URL refreshes work.
+Vercel redeploys automatically whenever `main` is pushed; no manual deployment upload is required. The reusable-workflow path also needs no backend, API key, or custom domain. Route rewrites make direct URL refreshes work.
+
+The public dashboard is a static product demo, not yet a live index of every future repository run. Automatic results appear natively in GitHub checks and PR comments. A centralized, continuously updating web feed uses the separate GitHub App webhook and private Blob archive path.
 
 ## Security model
 
@@ -198,6 +226,7 @@ tests/               deterministic unit, integration, and golden fixture tests
 - The token estimator is an MVP approximation, not tokenizer output.
 - Historical demo records are synthetic and clearly labeled.
 - The GitHub adapter analyzes completed logs; it is not a multi-provider CI ingestion service.
+- The static dashboard does not automatically discover new reusable-workflow runs; GitHub Checks and PR comments are the automatic production output today.
 - Codex patch generation and verification remain explicit, separately recorded actions.
 
 ## License
