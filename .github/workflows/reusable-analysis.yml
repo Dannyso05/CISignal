@@ -49,7 +49,6 @@ jobs:
       issues: write
       pull-requests: write
     env:
-      CISIGNAL_OUTPUT: ${{ runner.temp }}/cisignal
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Check out the pinned CISignal engine
@@ -85,14 +84,14 @@ jobs:
             --base-sha "$BASE_SHA" \
             --head-sha "$HEAD_SHA" \
             --token-budget "$TOKEN_BUDGET" \
-            --output-dir "$CISIGNAL_OUTPUT"
+            --output-dir "$RUNNER_TEMP/cisignal"
 
       - name: Render the pull request report
         if: inputs.comment_on_pr && inputs.pull_request > 0
         run: |
           node .cisignal-engine/dist/src/cli.js render-pr-comment \
-            --report "$CISIGNAL_OUTPUT/report.json" \
-            --output "$CISIGNAL_OUTPUT/pr-comment.md"
+            --report "$RUNNER_TEMP/cisignal/report.json" \
+            --output "$RUNNER_TEMP/cisignal/pr-comment.md"
 
       - name: Publish or update the CISignal comment
         if: inputs.comment_on_pr && inputs.pull_request > 0
@@ -102,13 +101,13 @@ jobs:
         run: |
           existing_comment_id=$(gh api "repos/${{ github.repository }}/issues/$PR_NUMBER/comments" --paginate --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("<!-- signalci-pr-report -->")) | .id' | tail -n 1)
           if [ -n "$existing_comment_id" ]; then
-            gh api --method PATCH "repos/${{ github.repository }}/issues/comments/$existing_comment_id" -F body=@"$CISIGNAL_OUTPUT/pr-comment.md"
+            gh api --method PATCH "repos/${{ github.repository }}/issues/comments/$existing_comment_id" -F body=@"$RUNNER_TEMP/cisignal/pr-comment.md"
           else
-            gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body-file "$CISIGNAL_OUTPUT/pr-comment.md"
+            gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body-file "$RUNNER_TEMP/cisignal/pr-comment.md"
           fi
 
       - name: Write the CISignal job summary
-        run: cat "$CISIGNAL_OUTPUT/summary.md" >> "$GITHUB_STEP_SUMMARY"
+        run: cat "$RUNNER_TEMP/cisignal/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload bounded CISignal artifacts
         uses: actions/upload-artifact@v7
