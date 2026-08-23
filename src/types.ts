@@ -23,7 +23,7 @@ export interface NormalizedLine {
 export interface FailureEvent {
   id: string;
   kind: FailureKind;
-  framework?: "jest" | "typescript" | "generic";
+  framework?: "jest" | "pytest" | "typescript" | "generic";
   job?: string;
   step?: string;
   testName?: string;

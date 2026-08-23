@@ -4,8 +4,15 @@
   "description": "Agent-native CI failure intelligence with cited, token-bounded evidence packets.",
   "type": "module",
   "bin": {
-    "signalci": "dist/cli.js"
+    "cisignal": "dist/src/cli.js",
+    "signalci": "dist/src/cli.js"
   },
+  "files": [
+    "dist",
+    "schemas",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
@@ -17,7 +24,8 @@
     "demo:emit-failure": "tsx demo/run-failing-scenario.ts",
     "demo:dashboard": "vite --config dashboard/vite.config.ts",
     "dashboard:build": "vite build --config dashboard/vite.config.ts",
-    "demo": "npm run demo:generate -- --seed 20260823 && npm run demo:dashboard"
+    "demo": "npm run demo:generate -- --seed 20260823 && npm run demo:dashboard",
+    "prepack": "npm run build"
   },
   "engines": {
     "node": ">=20"

@@ -1,0 +1,24 @@
+name: CISignal
+
+on:
+  workflow_run:
+    workflows: ["CI"] # Replace with the exact name of the workflow to watch.
+    types: [completed]
+
+permissions: {}
+
+jobs:
+  analyze:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+    uses: Dannyso05/CISignal/.github/workflows/reusable-analysis.yml@v1
+    with:
+      run_id: ${{ github.event.workflow_run.id }}
+      base_sha: ${{ github.event.workflow_run.pull_requests[0].base.sha || github.event.workflow_run.head_sha }}
+      head_sha: ${{ github.event.workflow_run.head_sha }}
+      pull_request: ${{ github.event.workflow_run.pull_requests[0].number || 0 }}
+      cisignal_ref: v1

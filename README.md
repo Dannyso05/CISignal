@@ -2,7 +2,7 @@
 
 **CISignal turns failed CI logs and a commit diff into a compact, cited evidence packet for coding agents—then learns across runs to recommend better engineering workflows.**
 
-[Live dashboard](https://ci-signal.vercel.app) · [Repository](https://github.com/Dannyso05/CISignal) · [Demo guide](DEMO.md)
+[Live dashboard](https://ci-signal.vercel.app) · [Repository](https://github.com/Dannyso05/CISignal) · [Install in any repo](docs/INSTALL_ANY_REPO.md) · [Demo guide](DEMO.md)
 
 **GitHub App:** the webhook, branded Check Run, inline annotation, idempotent PR comment, and private Vercel Blob archive are implemented. See [GitHub App setup](docs/GITHUB_APP_SETUP.md) for the credentials and installation steps.
 
@@ -46,7 +46,7 @@ npm run dashboard:build
 ```mermaid
 flowchart LR
     A[CI log + git diff] --> B[Normalize + redact]
-    B --> C[Jest / TypeScript / generic parsers]
+    B --> C[Jest / Vitest / pytest / TypeScript / generic parsers]
     C --> D[Rank + deduplicate + detect cascades]
     D --> E[Correlate changed files]
     E --> F[Budgeted evidence packet]
@@ -86,7 +86,7 @@ The fixture is synthetic and models an expiry-boundary regression: `src/auth/tok
 ## What the analyzer does
 
 1. Preserves raw, one-based line indices while stripping ANSI, timestamps, progress noise, and runner-specific path prefixes from normalized values.
-2. Parses Jest assertions, TypeScript compiler errors, and conservative generic errors.
+2. Parses Jest, Vitest, and pytest assertions, TypeScript compiler errors, and conservative generic errors.
 3. Collapses normalized duplicates and groups only reasonable downstream cascade candidates.
 4. Scores candidates with inspectable constants. Specific assertions and compiler errors rank above generic exits.
 5. Parses unified diffs and labels matching changes as **likely related**, never as proven causes.
@@ -131,6 +131,12 @@ GH_TOKEN=... npm run signalci -- github analyze \
 ```
 
 It requests only failed/timed-out job logs and the commit diff. Never place a token in a fixture, frontend variable, job summary, or repository-controlled test process.
+
+## Install in another repository
+
+The reusable workflow at [`.github/workflows/reusable-analysis.yml`](.github/workflows/reusable-analysis.yml) makes CISignal consumable without copying the analyzer into the target repository. A target repo adds one small `workflow_run` caller, then receives a native **CISignal** check, bounded artifacts, a job summary, and an optional updateable PR comment when its existing CI fails.
+
+See the [five-minute installation guide](docs/INSTALL_ANY_REPO.md) and [copyable caller workflow](examples/github-actions/cisignal.yml). The workflow uses only the target repository's short-lived `GITHUB_TOKEN`; no shared GitHub or OpenAI secret is required.
 
 ## Codex handoff
 
@@ -187,7 +193,7 @@ tests/               deterministic unit, integration, and golden fixture tests
 
 ## Known limitations
 
-- Jest and TypeScript receive the strongest structured support; generic parsing is intentionally conservative.
+- Jest, Vitest, pytest, and TypeScript receive structured support; generic parsing is intentionally conservative.
 - Cascade detection and diff correlation are heuristics and do not establish causation.
 - The token estimator is an MVP approximation, not tokenizer output.
 - Historical demo records are synthetic and clearly labeled.

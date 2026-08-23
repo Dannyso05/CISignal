@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { stripAnsi } from "../src/normalize/ansi.js";
 import { normalizeLog } from "../src/normalize/lines.js";
 import { JestParser } from "../src/parsers/jest.js";
+import { PytestParser } from "../src/parsers/pytest.js";
 import { TypeScriptParser } from "../src/parsers/typescript.js";
 import { GenericParser } from "../src/parsers/generic.js";
 import { deduplicate, scoreEvents } from "../src/analysis/rank.js";
@@ -42,6 +43,19 @@ AssertionError: expected 200 to be 401 // Object.is equality
 
  Test Files  1 failed (1)`;
 
+const pytestLog = `============================= test session starts ==============================
+=================================== FAILURES ===================================
+________________________ test_rejects_expired_token _________________________
+
+    def test_rejects_expired_token():
+>       assert status_for_token(100, 100) == 401
+E       assert 200 == 401
+
+tests/test_token.py:42: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_token.py::test_rejects_expired_token - assert 200 == 401
+============================== 1 failed in 0.08s ===============================`;
+
 describe("normalization", () => {
   it("removes ANSI formatting without mutating raw evidence", () => {
     const raw = "\u001b[31mFAIL\u001b[0m tests/demo.test.ts";
@@ -77,6 +91,20 @@ describe("parsers and ranking", () => {
     expect(event.message).toContain("expected 200 to be 401");
     expect(event.file).toBe("tests/auth/token.test.ts");
     expect(event.sourceLine).toBe(7);
+  });
+
+  it("groups a pytest assertion with its node id and source location", () => {
+    const [event] = new PytestParser().parse(normalizeLog(pytestLog));
+    expect(event.kind).toBe("assertion_failure");
+    expect(event.testName).toBe("test_rejects_expired_token");
+    expect(event.message).toBe("assert 200 == 401");
+    expect(event.file).toBe("tests/test_token.py");
+    expect(event.sourceLine).toBe(42);
+  });
+
+  it("derives a focused pytest reproduction command", () => {
+    const result = analyze({ logs: pytestLog, diff: "", runId: "pytest", tokenBudget: 900 });
+    expect(result.report.reproduce?.command).toBe("python -m pytest tests/test_token.py::test_rejects_expired_token");
   });
 
   it("extracts TypeScript compiler errors", () => {

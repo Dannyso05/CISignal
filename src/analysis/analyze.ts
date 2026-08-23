@@ -3,6 +3,7 @@ import { SCHEMA_VERSION } from "../config.js";
 import { normalizeLog } from "../normalize/lines.js";
 import { redactSecrets } from "../normalize/redact.js";
 import { JestParser } from "../parsers/jest.js";
+import { PytestParser } from "../parsers/pytest.js";
 import { TypeScriptParser } from "../parsers/typescript.js";
 import { GenericParser } from "../parsers/generic.js";
 import { parseDiff } from "../diff/parse-diff.js";
@@ -14,7 +15,7 @@ import { estimateTokens } from "../packing/estimate-tokens.js";
 import { renderContext } from "../packing/render-context.js";
 import { renderSummary } from "../reports/markdown.js";
 
-const parsers = [new JestParser(), new TypeScriptParser(), new GenericParser()];
+const parsers = [new JestParser(), new PytestParser(), new TypeScriptParser(), new GenericParser()];
 
 function confidenceFor(primary: FailureEvent, runnerUp?: FailureEvent): number {
   const gap = primary.score - (runnerUp?.score ?? 0);
@@ -82,7 +83,9 @@ export function analyze(input: AnalyzeInput): AnalyzeResult {
     evidence,
     reproduce: primary.framework === "jest" && primary.file
       ? { command: `npm test -- ${primary.file}`, confidence: 0.72, verified: false }
-      : undefined,
+      : primary.framework === "pytest" && primary.file
+        ? { command: `python -m pytest ${primary.file}${primary.testName ? `::${primary.testName}` : ""}`, confidence: 0.78, verified: false }
+        : undefined,
     compression: {
       rawLines: lines.length,
       rawBytes: Buffer.byteLength(input.logs),

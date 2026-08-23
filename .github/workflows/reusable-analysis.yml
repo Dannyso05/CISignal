@@ -1,0 +1,119 @@
+name: CISignal reusable analysis
+
+on:
+  workflow_call:
+    inputs:
+      run_id:
+        description: Failed GitHub Actions run ID to analyze
+        required: true
+        type: string
+      base_sha:
+        description: Base commit used to calculate the related diff
+        required: true
+        type: string
+      head_sha:
+        description: Failed run head commit
+        required: true
+        type: string
+      pull_request:
+        description: Pull request number to update, or 0 for no comment
+        required: false
+        default: 0
+        type: number
+      comment_on_pr:
+        description: Publish an idempotent CISignal pull request comment
+        required: false
+        default: true
+        type: boolean
+      token_budget:
+        description: Maximum estimated tokens in the agent evidence packet
+        required: false
+        default: 2000
+        type: number
+      cisignal_ref:
+        description: CISignal branch, tag, or commit to execute
+        required: false
+        default: main
+        type: string
+
+permissions: {}
+
+jobs:
+  analyze:
+    name: Analyze failed CI run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+    env:
+      CISIGNAL_OUTPUT: ${{ runner.temp }}/cisignal
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out the pinned CISignal engine
+        uses: actions/checkout@v7
+        with:
+          repository: Dannyso05/CISignal
+          ref: ${{ inputs.cisignal_ref }}
+          path: .cisignal-engine
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: .cisignal-engine/package-lock.json
+
+      - name: Install and build the deterministic analyzer
+        run: |
+          npm ci --prefix .cisignal-engine
+          npm --prefix .cisignal-engine run build
+
+      - name: Analyze failed jobs and the commit diff
+        env:
+          RUN_ID: ${{ inputs.run_id }}
+          BASE_SHA: ${{ inputs.base_sha }}
+          HEAD_SHA: ${{ inputs.head_sha }}
+          TOKEN_BUDGET: ${{ inputs.token_budget }}
+        run: |
+          node .cisignal-engine/dist/src/cli.js github analyze \
+            --repository "${{ github.repository }}" \
+            --run-id "$RUN_ID" \
+            --base-sha "$BASE_SHA" \
+            --head-sha "$HEAD_SHA" \
+            --token-budget "$TOKEN_BUDGET" \
+            --output-dir "$CISIGNAL_OUTPUT"
+
+      - name: Render the pull request report
+        if: inputs.comment_on_pr && inputs.pull_request > 0
+        run: |
+          node .cisignal-engine/dist/src/cli.js render-pr-comment \
+            --report "$CISIGNAL_OUTPUT/report.json" \
+            --output "$CISIGNAL_OUTPUT/pr-comment.md"
+
+      - name: Publish or update the CISignal comment
+        if: inputs.comment_on_pr && inputs.pull_request > 0
+        env:
+          PR_NUMBER: ${{ inputs.pull_request }}
+        shell: bash
+        run: |
+          existing_comment_id=$(gh api "repos/${{ github.repository }}/issues/$PR_NUMBER/comments" --paginate --jq '.[] | select(.user.login == "github-actions[bot]") | select(.body | contains("<!-- signalci-pr-report -->")) | .id' | tail -n 1)
+          if [ -n "$existing_comment_id" ]; then
+            gh api --method PATCH "repos/${{ github.repository }}/issues/comments/$existing_comment_id" -F body=@"$CISIGNAL_OUTPUT/pr-comment.md"
+          else
+            gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body-file "$CISIGNAL_OUTPUT/pr-comment.md"
+          fi
+
+      - name: Write the CISignal job summary
+        run: cat "$CISIGNAL_OUTPUT/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload bounded CISignal artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: cisignal-${{ inputs.run_id }}
+          path: ${{ runner.temp }}/cisignal
+          if-no-files-found: error
+          retention-days: 14
