@@ -1,5 +1,5 @@
 {
-  "observedAt": "2026-08-23T23:15:24.000Z",
+  "observedAt": "2026-08-23T23:32:59.000Z",
   "repository": "Dannyso05/fastapi",
   "workflowName": "Test",
   "failedChecks": 17,
@@ -8,31 +8,31 @@
     "macOS",
     "Windows"
   ],
-  "pullRequestUrl": "https://github.com/Dannyso05/fastapi/pull/1",
-  "sourceRunUrl": "https://github.com/Dannyso05/fastapi/actions/runs/32672867721",
-  "analysisRunUrl": "https://github.com/Dannyso05/fastapi/actions/runs/32673072610",
-  "checkRunUrl": "https://github.com/Dannyso05/fastapi/runs/97276804673",
+  "pullRequestUrl": "https://github.com/Dannyso05/fastapi/pull/2",
+  "sourceRunUrl": "https://github.com/Dannyso05/fastapi/actions/runs/32673679212",
+  "analysisRunUrl": "https://github.com/Dannyso05/fastapi/actions/runs/32673937044",
+  "checkRunUrl": "https://github.com/Dannyso05/fastapi/runs/97278919069",
   "report": {
     "schemaVersion": "0.1",
-    "runId": "32672867721",
+    "runId": "32673679212",
     "repository": "Dannyso05/fastapi",
-    "pullRequest": 1,
-    "headSha": "6e9d69b3fc556c280b1c07cd7c7b60482ad98f0e",
+    "pullRequest": 2,
+    "headSha": "89c1b0b7a92594510c4295cfb2ea8e80baef3837",
     "baseSha": "7b901f7b54a56c7d5ccf314508a3cd4431aa7323",
     "attemptNumber": 1,
     "conclusion": "failure",
     "classification": "assertion_failure",
-    "fingerprint": "f7a0ae01b0156f3361559bea3825a66068234f1c53a86fc775ea254ff484a409",
+    "fingerprint": "824b0cba90d65496625f3a18fcbd1385b0aaf877b18b39e0cb5e2338e1311c7d",
     "confidence": 0.8520000000000001,
     "primaryFailure": {
-      "id": "pytest-4022",
+      "id": "pytest-4002",
       "kind": "assertion_failure",
       "framework": "pytest",
       "testName": "test_health_contract",
-      "message": "AssertionError: assert {'status': 'degraded'} == {'status': 'ok'}",
+      "message": "AssertionError: assert {'status': 'maintenance'} == {'status': 'ok'}",
       "file": "tests/cisignal_demo/test_app.py",
-      "rawStart": 4022,
-      "rawEnd": 4022,
+      "rawStart": 4002,
+      "rawEnd": 4002,
       "score": 16,
       "evidenceReasons": [
         "+10 explicit failed assertion",
@@ -43,14 +43,14 @@
     "cascadingFailures": [],
     "alternativeFailures": [
       {
-        "id": "pytest-22491",
+        "id": "pytest-16848",
         "kind": "assertion_failure",
         "framework": "pytest",
         "testName": "test_health_contract",
         "message": "AssertionError",
         "file": "tests/cisignal_demo/test_app.py",
-        "rawStart": 22491,
-        "rawEnd": 22491,
+        "rawStart": 16848,
+        "rawEnd": 16848,
         "score": 10,
         "evidenceReasons": [
           "+10 explicit failed assertion"
@@ -69,7 +69,7 @@
           ]
         ],
         "hunks": [
-          "@@ -5,4 +5,4 @@\n \n @app.get(\"/health\")\n def health() -> dict[str, str]:\n-    return {\"status\": \"ok\"}\n+    return {\"status\": \"degraded\"}\n"
+          "@@ -5,4 +5,4 @@\n \n @app.get(\"/health\")\n def health() -> dict[str, str]:\n-    return {\"status\": \"ok\"}\n+    return {\"status\": \"maintenance\"}\n"
         ]
       }
     ],
@@ -85,18 +85,18 @@
     "evidence": [
       {
         "id": "evidence-1",
-        "eventId": "pytest-4022",
-        "rawStart": 4022,
-        "rawEnd": 4022,
-        "text": "2026-08-23T23:13:02.8405023Z FAILED tests/cisignal_demo/test_app.py::test_health_contract - AssertionError: assert {'status': 'degraded'} == {'status': 'ok'}",
+        "eventId": "pytest-4002",
+        "rawStart": 4002,
+        "rawEnd": 4002,
+        "text": "2026-08-23T23:29:43.7151663Z FAILED tests/cisignal_demo/test_app.py::test_health_contract - AssertionError: assert {'status': 'maintenance'} == {'status': 'ok'}",
         "estimatedTokens": 40
       },
       {
         "id": "evidence-2",
-        "eventId": "pytest-22491",
-        "rawStart": 22491,
-        "rawEnd": 22491,
-        "text": "2026-08-23T23:13:08.3990860Z FAILED tests/cisignal_demo/test_app.py::test_health_contract - AssertionError",
+        "eventId": "pytest-16848",
+        "rawStart": 16848,
+        "rawEnd": 16848,
+        "text": "2026-08-23T23:29:43.1424060Z FAILED tests/cisignal_demo/test_app.py::test_health_contract - AssertionError",
         "estimatedTokens": 27
       }
     ],
@@ -106,10 +106,10 @@
       "verified": false
     },
     "compression": {
-      "rawLines": 42068,
-      "rawBytes": 4104080,
-      "rawEstimatedTokens": 1025617,
-      "packetEstimatedTokens": 377,
+      "rawLines": 41966,
+      "rawBytes": 4103338,
+      "rawEstimatedTokens": 1025402,
+      "packetEstimatedTokens": 379,
       "reductionPercent": 99.96
     },
     "limitations": [

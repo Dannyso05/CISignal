@@ -2,7 +2,7 @@
 
 **CISignal turns failed CI logs and a commit diff into a compact, cited evidence packet for coding agents—then learns across runs to recommend better engineering workflows.**
 
-[Live dashboard](https://ci-signal.vercel.app) · [Live FastAPI proof](https://github.com/Dannyso05/fastapi/pull/1) · [Repository](https://github.com/Dannyso05/CISignal) · [Install in any repo](docs/INSTALL_ANY_REPO.md) · [Demo guide](DEMO.md)
+[Live dashboard](https://ci-signal.vercel.app) · [Live FastAPI proof](https://github.com/Dannyso05/fastapi/pull/2) · [Repository](https://github.com/Dannyso05/CISignal) · [Install in any repo](docs/INSTALL_ANY_REPO.md) · [Demo guide](DEMO.md)
 
 The normal GitHub path is automatic: your existing CI workflow still runs its own tests, then a small `workflow_run` caller invokes CISignal only after that workflow completes with a failure. CISignal reads the completed failed-job logs and commit diff, publishes a neutral Check Run, updates one cited PR comment, and uploads a bounded evidence artifact. It does not rerun the test suite or replace the CI result.
 
@@ -12,14 +12,14 @@ The FastAPI fork demonstrates the production-shaped path against FastAPI's exist
 
 | Verified fact | Live result |
 | --- | --- |
-| Source CI | [FastAPI Test run 32672867721](https://github.com/Dannyso05/fastapi/actions/runs/32672867721) |
+| Source CI | [FastAPI Test run 32673679212](https://github.com/Dannyso05/fastapi/actions/runs/32673679212) |
 | Real CI environment | Ubuntu, macOS, and Windows across FastAPI's Python matrix |
 | Source conclusion | 17 failed checks in the completed workflow |
-| CISignal observer | [Separate `workflow_run` analysis 32673072610](https://github.com/Dannyso05/fastapi/actions/runs/32673072610) |
-| PR output | [Neutral CISignal check and idempotent comment](https://github.com/Dannyso05/fastapi/pull/1) |
+| CISignal observer | [Separate `workflow_run` analysis 32673937044](https://github.com/Dannyso05/fastapi/actions/runs/32673937044) |
+| PR output | [Neutral CISignal check and idempotent comment](https://github.com/Dannyso05/fastapi/pull/2) |
 | Likely origin | `test_health_contract` in `tests/cisignal_demo/test_app.py` |
 | Related change | `tests/cisignal_demo/app.py` |
-| Measured context | 42,068 log lines / 1,025,617 estimated tokens → 377-token packet (99.96% reduction) |
+| Measured context | 41,966 log lines / 1,025,402 estimated tokens → 379-token packet (99.96% reduction) |
 
 **No manual report upload is required for GitHub use.** The dashboard's file picker is only an optional, client-side inspector for a `report.json`; imported files stay in the browser. The PR check, comment, summary, and artifact are created automatically after the watched CI workflow fails.
 
@@ -189,7 +189,7 @@ CISignal writes `work/codex-prompt.md` and prints an explicit non-interactive Co
 
 The static Vite/React dashboard provides:
 
-- `/run/fastapi-32672867721` — the checked-in live FastAPI proof with links to the source CI, analyzer run, Check Run, exact evidence, related diff, and packet preview,
+- `/run/fastapi-32673679212` — the checked-in live FastAPI proof with links to the source CI, analyzer run, Check Run, exact evidence, related diff, and packet preview,
 - `/insights` — category distribution, fingerprint recurrence, potential-flake evidence, and prioritized recommendations,
 - `/methodology` — scoring, token estimation, and claim boundaries,
 - optional client-side `report.json` validation and inspection.

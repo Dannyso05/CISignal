@@ -424,7 +424,7 @@ export function App() {
   }, []);
 
   const navigate = (next: View) => {
-    const path = next === "run" ? "/run/fastapi-32672867721" : `/${next}`;
+    const path = next === "run" ? "/run/fastapi-32673679212" : `/${next}`;
     window.history.pushState({}, "", path);
     setView(next);
     window.scrollTo({ top: 0, behavior: "smooth" });

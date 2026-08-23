@@ -6,7 +6,7 @@ The current-failure page uses a real completed FastAPI CI run. The learning-over
 
 1. Open [ci-signal.vercel.app](https://ci-signal.vercel.app) and identify the live FastAPI proof.
 2. Open **Source CI** to show FastAPI's own `Test` matrix, then **CISignal run** to show the separate post-CI observer.
-3. Read the measured `42,068 raw lines → 377 estimated tokens` and `99.96%` reduction.
+3. Read the measured `41,966 raw lines → 379 estimated tokens` and `99.96%` reduction.
 4. Show `test_health_contract`, its timestamped evidence, and the related `tests/cisignal_demo/app.py` change.
 5. Scroll to **From one failure to engineering memory** and open **Learn over time**.
 6. State the provenance clearly: 24 labeled generated records demonstrate the history feature; they are not production telemetry.
@@ -27,7 +27,7 @@ npm run demo
 
 ## Automatic pull-request path
 
-1. Open the [FastAPI proof pull request](https://github.com/Dannyso05/fastapi/pull/1).
+1. Open the [FastAPI proof pull request](https://github.com/Dannyso05/fastapi/pull/2).
 2. Show the failed checks from FastAPI's existing **Test** workflow.
 3. Open the neutral **CISignal** check and the single updateable CISignal comment.
 4. Follow its link to the separate post-CI analyzer run and bounded artifact.
