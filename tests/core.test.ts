@@ -31,6 +31,17 @@ const jestLog = `FAIL tests/auth/token.test.ts
       at Object.<anonymous> (tests/auth/token.test.ts:42:18)
 Error: Process completed with exit code 1`;
 
+const vitestLog = ` ❯ tests/auth/token.test.ts (1 test | 1 failed) 3ms
+     × rejects a token exactly at its expiration boundary 3ms
+
+ FAIL  tests/auth/token.test.ts > token expiry > rejects a token exactly at its expiration boundary
+AssertionError: expected 200 to be 401 // Object.is equality
+
+ ❯ tests/auth/token.test.ts:7:48
+      7|     expect(statusForToken(boundary, boundary)).toBe(401);
+
+ Test Files  1 failed (1)`;
+
 describe("normalization", () => {
   it("removes ANSI formatting without mutating raw evidence", () => {
     const raw = "\u001b[31mFAIL\u001b[0m tests/demo.test.ts";
@@ -57,6 +68,15 @@ describe("parsers and ranking", () => {
     expect(event.message).toContain("Expected: 401");
     expect(event.file).toBe("tests/auth/token.test.ts");
     expect(event.sourceLine).toBe(42);
+  });
+
+  it("groups a Vitest assertion with its suite and source location", () => {
+    const [event] = new JestParser().parse(normalizeLog(vitestLog));
+    expect(event.kind).toBe("assertion_failure");
+    expect(event.testName).toBe("token expiry › rejects a token exactly at its expiration boundary");
+    expect(event.message).toContain("expected 200 to be 401");
+    expect(event.file).toBe("tests/auth/token.test.ts");
+    expect(event.sourceLine).toBe(7);
   });
 
   it("extracts TypeScript compiler errors", () => {
