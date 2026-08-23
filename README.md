@@ -2,7 +2,7 @@
 
 **CISignal turns failed CI logs and a commit diff into a compact, cited evidence packet for coding agents—then learns across runs to recommend better engineering workflows.**
 
-[Live dashboard](https://ci-signal.vercel.app) · [Live FastAPI proof](https://github.com/Dannyso05/fastapi/pull/2) · [Repository](https://github.com/Dannyso05/CISignal) · [Install in any repo](docs/INSTALL_ANY_REPO.md) · [Demo guide](DEMO.md)
+[Live dashboard](https://ci-signal.vercel.app) · [Live FastAPI proof](https://github.com/Dannyso05/fastapi/pull/2) · [Native cascade proof](https://github.com/Dannyso05/CISignal/pull/2) · [Install in any repo](docs/INSTALL_ANY_REPO.md) · [Demo guide](DEMO.md)
 
 The normal GitHub path is automatic: your existing CI workflow still runs its own tests, then a small `workflow_run` caller invokes CISignal only after that workflow completes with a failure. CISignal reads the completed failed-job logs and commit diff, publishes a neutral Check Run, updates one cited PR comment, and uploads a bounded evidence artifact. It does not rerun the test suite or replace the CI result.
 
@@ -24,6 +24,22 @@ The FastAPI fork demonstrates the production-shaped path against FastAPI's exist
 **No manual report upload is required for GitHub use.** The dashboard's file picker is only an optional, client-side inspector for a `report.json`; imported files stay in the browser. The PR check, comment, summary, and artifact are created automatically after the watched CI workflow fails.
 
 The GitHub App webhook, branded Check Run path, and private Vercel Blob archive are also implemented for the one-click installation direction. See [GitHub App setup](docs/GITHUB_APP_SETUP.md).
+
+## Tuned native-repository proof
+
+[CISignal PR #2](https://github.com/Dannyso05/CISignal/pull/2) is the richer companion demo inside this repository. Its pull-request diff changes only the token-expiry comparison, but four existing Vitest contracts fail because access-token, refresh-token, session, and protected-request behavior share the same boundary rule.
+
+| Verified fact | Native result |
+| --- | --- |
+| Source CI | [`Verify` run 32674363371](https://github.com/Dannyso05/CISignal/actions/runs/32674363371) owns build, lint, and the real Vitest execution |
+| CISignal observer | [Separate post-CI run 32674382192](https://github.com/Dannyso05/CISignal/actions/runs/32674382192) starts only after `Verify` fails |
+| Likely origin | `token expiry › rejects a token exactly at its expiration boundary` |
+| Related change | `src/auth/token.ts` |
+| Secondary signals | Four collapsed: three downstream auth-context assertions plus the generic runner exit |
+| Measured context | 6,553 estimated tokens → 793-token packet (87.90% reduction) |
+| PR output | One neutral CISignal Check Run and one updateable, cited comment |
+
+This proof also exercises detailed multi-failure Vitest parsing. The parser behavior is covered by a deterministic regression test on `main`; the demo PR itself remains a one-line, intentionally failing source change.
 
 ## Local deterministic demo
 

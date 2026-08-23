@@ -34,6 +34,16 @@ npm run demo
 
 No report download or dashboard upload is required for this path.
 
+## Tuned native-repository path
+
+1. Open [CISignal PR #2](https://github.com/Dannyso05/CISignal/pull/2).
+2. Confirm the PR diff is only the inclusive-to-exclusive boundary comparison in `src/auth/token.ts`.
+3. Open the failed [`Verify` run](https://github.com/Dannyso05/CISignal/actions/runs/32674363371) and show four real Vitest failures from one shared rule.
+4. Open the separate [post-CI CISignal run](https://github.com/Dannyso05/CISignal/actions/runs/32674382192).
+5. Show the neutral CISignal check and the single PR comment: one likely origin, the related source change, four collapsed secondary signals, exact cited evidence, and the focused reproduction command.
+
+This is the most complete PR-native demo. The FastAPI PR proves portability; this PR proves richer origin-versus-cascade reasoning.
+
 ## Synthetic GitHub Actions path
 
 1. Open **Actions → Demo CI → Run workflow**.
