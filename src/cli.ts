@@ -8,6 +8,7 @@ import { validateFailureRecord } from "./reports/json.js";
 import type { FailureRecord } from "./types.js";
 import { collectGitHubRun } from "./github/collect-run.js";
 import { createCodexHandoff } from "./codex/prompt.js";
+import { renderPullRequestComment } from "./reports/pr-comment.js";
 
 function options(args: string[]): Map<string, string> {
   const values = new Map<string, string>();
@@ -83,6 +84,16 @@ async function main(): Promise<void> {
     await mkdir(outputDir, { recursive: true });
     await writeFile(resolve(outputDir, "codex-prompt.md"), `${handoff.prompt}\n`);
     process.stdout.write(`Wrote bounded Codex handoff to ${resolve(outputDir, "codex-prompt.md")}\nRun explicitly if desired:\n${handoff.command}\n`);
+    return;
+  }
+  if (command === "render-pr-comment") {
+    const values = options([subcommand, ...rest].filter(Boolean));
+    const reportValue: unknown = JSON.parse(await readFile(resolve(requireOption(values, "report")), "utf8"));
+    if (!validateFailureRecord(reportValue)) throw new Error("PR comment input is not a valid SignalCI report");
+    const output = resolve(values.get("output") ?? "work/pr-comment.md");
+    await mkdir(resolve(output, ".."), { recursive: true });
+    await writeFile(output, renderPullRequestComment(reportValue));
+    process.stdout.write(`Wrote PR-formatted SignalCI report to ${output}\n`);
     return;
   }
   if (command === "validate") {

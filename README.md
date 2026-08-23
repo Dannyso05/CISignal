@@ -2,7 +2,7 @@
 
 **SignalCI turns failed CI logs and a commit diff into a compact, cited evidence packet for coding agents—then learns across runs to recommend better engineering workflows.**
 
-[Repository](https://github.com/Dannyso05/CISignal) · **Hosted dashboard:** production URL pending the first Vercel alias
+[Live dashboard](https://ci-signal.vercel.app) · [Repository](https://github.com/Dannyso05/CISignal) · [Demo guide](DEMO.md)
 
 > Demonstration metrics below were measured on the included synthetic fixture. They are not production benchmarks.
 
@@ -12,7 +12,7 @@
 | SignalCI agent packet | 481 estimated tokens |
 | Context reduction | 99.96% |
 | Primary evidence | raw lines 42,002–42,010 |
-| Golden checks | 19 unit/integration tests plus deterministic demo verification |
+| Golden checks | 21 unit/integration tests plus deterministic demo verification |
 
 SignalCI accelerates failure triage and agent repair loops; it does not make CI test execution itself faster.
 
@@ -108,11 +108,12 @@ Every recommendation includes supporting run IDs, confidence, an action, methodo
 
 ## GitHub Actions demonstration
 
-The repository includes three workflows:
+The repository includes four workflows:
 
 - `Verify` proves a clean checkout can build, test, regenerate, verify, and bundle the dashboard.
 - `Demo CI` manually runs one deliberately failing synthetic scenario and uploads the complete transcript even after failure.
 - `SignalCI Triage` runs after a failed `Demo CI`, downloads the transcript with only `actions: read` and `contents: read`, produces the standard artifacts, validates the report, and writes a GitHub job summary.
+- `SignalCI PR` analyzes the focused sample failure against the actual pull-request diff and publishes an updateable, cited PR comment.
 
 From the GitHub **Actions** tab, run **Demo CI** and choose `expired-token`, `fixture-cascade`, or `typescript-error`. The failed conclusion is intentional and triggers the follow-up triage workflow.
 

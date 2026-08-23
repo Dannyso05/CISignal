@@ -4,7 +4,7 @@ All included failure logs and historical records are deterministic synthetic dem
 
 ## Judge path — 60 seconds
 
-1. Open the hosted Vercel URL (production alias pending first deployment).
+1. Open [ci-signal.vercel.app](https://ci-signal.vercel.app).
 2. Read `72,418 raw lines → 481 estimated tokens` and the measured `99.96%` reduction.
 3. Open **Current failure** and show the expired-token assertion at raw lines 42,002–42,010.
 4. Show `src/auth/token.ts` as likely related, explicitly labeled correlation.
