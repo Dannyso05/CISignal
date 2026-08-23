@@ -16,10 +16,10 @@ jobs:
       contents: read
       issues: write
       pull-requests: write
-    uses: Dannyso05/CISignal/.github/workflows/reusable-analysis.yml@bce5ecd9d22c66c6bcb0cc4e2769b50f8d64ee3c
+    uses: Dannyso05/CISignal/.github/workflows/reusable-analysis.yml@9d84383ac2bf2644cebdf1729958291f746bdc83
     with:
       run_id: ${{ github.event.workflow_run.id }}
       base_sha: ${{ github.event.workflow_run.pull_requests[0].base.sha }}
       head_sha: ${{ github.event.workflow_run.head_sha }}
       pull_request: ${{ github.event.workflow_run.pull_requests[0].number }}
-      cisignal_ref: bce5ecd9d22c66c6bcb0cc4e2769b50f8d64ee3c
+      cisignal_ref: 9d84383ac2bf2644cebdf1729958291f746bdc83

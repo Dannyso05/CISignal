@@ -3,6 +3,7 @@ import type { FailureParser } from "./parser.js";
 import { eventId } from "./parser.js";
 
 const FAIL_FILE = /^\s*FAIL\s+([^\s]+\.(?:[cm]?[jt]sx?))(?:\s+.*)?$/;
+const VITEST_FAILURE = /^\s*FAIL\s+([^\s]+\.(?:[cm]?[jt]sx?))\s+>\s+(.+)$/;
 const TEST_NAME = /^\s*[●✕×]\s+(.+)$/;
 const STACK = /\bat\s+(?:.+?\s+\()?([^()\s]+\.(?:[cm]?[jt]sx?)):(\d+):(\d+)\)?/;
 const VITEST_STACK = /^\s*❯\s+([^:\s]+\.(?:[cm]?[jt]sx?)):(\d+):(\d+)/;
@@ -13,9 +14,53 @@ export class JestParser implements FailureParser {
   parse(lines: NormalizedLine[]): FailureEvent[] {
     const events: FailureEvent[] = [];
     let failedFile: string | undefined;
+    const detailedVitestNames = new Set(lines.flatMap((line) => {
+      const match = line.normalized.match(VITEST_FAILURE);
+      return match ? [match[2].split(" > ").at(-1) ?? match[2]] : [];
+    }));
 
     for (let index = 0; index < lines.length; index += 1) {
       const line = lines[index];
+      const vitestFailure = line.normalized.match(VITEST_FAILURE);
+      if (vitestFailure) {
+        const block: NormalizedLine[] = [line];
+        let end = index;
+        for (let cursor = index + 1; cursor < Math.min(lines.length, index + 40); cursor += 1) {
+          if (VITEST_FAILURE.test(lines[cursor].normalized) || /^\s*(Test Files|Tests:|Test Suites:)/.test(lines[cursor].normalized)) break;
+          block.push(lines[cursor]);
+          end = cursor;
+        }
+
+        const expected = block.find((entry) => /^\s*Expected:/.test(entry.normalized));
+        const received = block.find((entry) => /^\s*Received:/.test(entry.normalized));
+        const assertionLine = block.find((entry) => /expect\(|Expected:|Received:|AssertionError/i.test(entry.normalized));
+        const stack = block.map((entry) => entry.normalized.match(STACK) ?? entry.normalized.match(VITEST_STACK)).find(Boolean);
+        const message = [assertionLine?.normalized.trim(), expected?.normalized.trim(), received?.normalized.trim()]
+          .filter(Boolean)
+          .filter((value, valueIndex, values) => values.indexOf(value) === valueIndex)
+          .join(" ") || vitestFailure[2].trim();
+
+        events.push({
+          id: eventId("jest", line.index),
+          kind: expected || received || assertionLine ? "assertion_failure" : "test_failure",
+          framework: "jest",
+          testName: vitestFailure[2].replaceAll(" > ", " › "),
+          message,
+          file: stack?.[1] ?? vitestFailure[1],
+          sourceLine: stack ? Number(stack[2]) : undefined,
+          rawStart: line.index,
+          rawEnd: block[block.length - 1]?.index ?? line.index,
+          score: 0,
+          evidenceReasons: [],
+          stackFiles: block.flatMap((entry) => {
+            const match = entry.normalized.match(STACK) ?? entry.normalized.match(VITEST_STACK);
+            return match ? [match[1]] : [];
+          }),
+        });
+        index = end;
+        continue;
+      }
+
       const failMatch = line.normalized.match(FAIL_FILE);
       if (failMatch) {
         failedFile = failMatch[1].trim();
@@ -24,6 +69,8 @@ export class JestParser implements FailureParser {
 
       const testMatch = line.normalized.match(TEST_NAME);
       if (!testMatch) continue;
+      const summaryTestName = testMatch[1].trim().replace(/\s+\d+(?:\.\d+)?m?s$/, "");
+      if (detailedVitestNames.has(summaryTestName)) continue;
 
       const block: NormalizedLine[] = [line];
       let end = index;

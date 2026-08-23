@@ -43,6 +43,30 @@ AssertionError: expected 200 to be 401 // Object.is equality
 
  Test Files  1 failed (1)`;
 
+const multiFailureVitestLog = ` ❯ tests/auth/token.test.ts (4 tests | 4 failed) 5ms
+     × rejects a token exactly at its expiration boundary 2ms
+     × auth context fixture rejects a refresh token at the same boundary 1ms
+     × auth context fixture clears a session expired at the boundary 1ms
+     × auth context fixture denies a protected request at the boundary 1ms
+
+ FAIL  tests/auth/token.test.ts > token expiry > rejects a token exactly at its expiration boundary
+AssertionError: expected 200 to be 401 // Object.is equality
+ ❯ tests/auth/token.test.ts:8:48
+
+ FAIL  tests/auth/token.test.ts > token expiry > auth context fixture rejects a refresh token at the same boundary
+AssertionError: expected 200 to be 401 // Object.is equality
+ ❯ tests/auth/token.test.ts:12:48
+
+ FAIL  tests/auth/token.test.ts > token expiry > auth context fixture clears a session expired at the boundary
+AssertionError: expected 200 to be 401 // Object.is equality
+ ❯ tests/auth/token.test.ts:16:48
+
+ FAIL  tests/auth/token.test.ts > token expiry > auth context fixture denies a protected request at the boundary
+AssertionError: expected 200 to be 401 // Object.is equality
+ ❯ tests/auth/token.test.ts:20:48
+
+ Test Files  1 failed (1)`;
+
 const pytestLog = `============================= test session starts ==============================
 =================================== FAILURES ===================================
 ________________________ test_rejects_expired_token _________________________
@@ -91,6 +115,14 @@ describe("parsers and ranking", () => {
     expect(event.message).toContain("expected 200 to be 401");
     expect(event.file).toBe("tests/auth/token.test.ts");
     expect(event.sourceLine).toBe(7);
+  });
+
+  it("parses detailed Vitest failure blocks and collapses downstream auth symptoms", () => {
+    const events = new JestParser().parse(normalizeLog(multiFailureVitestLog));
+    expect(events).toHaveLength(4);
+    const result = analyze({ logs: multiFailureVitestLog, diff, runId: "vitest-cascade", tokenBudget: 1200 });
+    expect(result.report.primaryFailure.testName).toBe("token expiry › rejects a token exactly at its expiration boundary");
+    expect(result.report.cascadingFailures).toHaveLength(3);
   });
 
   it("groups a pytest assertion with its node id and source location", () => {
